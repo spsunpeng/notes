@@ -1,46 +1,3 @@
-# 一、redis
-
-### 1、springBoot整合Redis实例
-
-#### 1、依赖
-
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-data-redis</artifactId>
-    <version>2.1.5.RELEASE</version>
-</dependency>
-<!--连接池，redis需要-->
-<dependency>
-    <groupId>org.apache.commons</groupId>
-    <artifactId>commons-pool2</artifactId>
-</dependency> 
-```
-
-#### 2、配置
-
-```yml
-spring:
-  redis:
-    database: 0
-    host: 127.0.0.1
-    port: 6379
-```
-
-#### 3、使用
-
-```java
-redisTemplate.opsForValue().set("student", student);
-redisTemplate.opsForValue().get(key);
-redisTemplate.delete(key);
-```
-
-
-
-
-
-# 二、git
-
 ### 1、授权
 
 ```sh
@@ -175,7 +132,7 @@ HEAD指针：本地仓库每个分支上的代码的修改都会生成一个comm
 
 #### 5.2 idea
 
-![](其他.assets/版本回退.png)
+![](git.assets/版本回退.png)
 
 - LOG/History
   - LOG：版本回退，和git的指令一样
@@ -195,17 +152,17 @@ HEAD指针：本地仓库每个分支上的代码的修改都会生成一个comm
 
 #### 6.1 git
 
-![](其他.assets/冲突.png)
+![](git.assets/冲突.png)
 
 #### 6.2 idea
 
-![](其他.assets/回退merge.png)
+![](git.assets/回退merge.png)
 
 
 
 ### 7、idea集成git
 
-![](其他.assets/idea集成git.png)
+![](git.assets/idea集成git.png)
 
 
 
@@ -264,115 +221,5 @@ git checkout -b origin/feature origin/develop #不由本地操作，而由远程
 #合并分支
 git merge BranceName
 ```
-
-
-
-
-
-
-
-# 三、jackson
-
-### 1、ObjectMapper
-
-#### 1.1 转换
-
-```java
-ObjectMapper objectMapper= new ObjectMapper()
-User user = new User();
-String string = ""
-List<User> userList = new ArrayList<>();
-```
-
-| source   | target   | to                                                           |
-| -------- | -------- | ------------------------------------------------------------ |
-| String   | Object   | objectMapper.readValue(string, User.class) <br />objectMapper.readValue(string, new TypeReference<List<User>>() { }) |
-| String   | JsonNode | objectMapper.readTree(string);  (string必须是json，否则报错) |
-| Object   | String   | objectMapper.writeValueAsString(user)                        |
-| Object   | JsonNode | objectMapper.valueToTree(string);                            |
-| JsonNode | Object   | 目前没用到                                                   |
-| JsonNode | String   | toString                                                     |
-
-
-
-### 2、ObjectNode
-
-#### 2.1 构建ObjectNode
-
-```java
-ObjectNode objectNode = objectMapper.createObjectNode();
-User user = new User();
-
-//设置string
-objectNode.put("name", "suoeng");
-//设置objectNode/jsonNode/arrayNode
-objectNode.set("user", objectMapper.valueToTree(user)); //作为整体存入
-objectNode.setAll(objectMapper.valueToTree(user));      //每个字段单独存入
-```
-
-
-
-### 3、JsonNode
-
-```java
-//取值
-JsonNode jsonNode = objectNode;
-jsonNode.get(string)
-```
-
-
-
-### 4、总结
-
-#### 4.1 异常
-
-##### 4.1.1 编译异常
-
-JsonProcessingException
-
-- 运行异常，所以必须处理
-- json定义的异常，之所以定义是因为一些方法处理不了null，所以这类方法使用时要校验参数是否未空，比如readValue，反之未见此类异常说明参数可以穿空
-
-##### 4.1.2 String不是json格式
-
-#### 4.2 类型
-
-##### 4.2.1 类型
-
-```java
-User user = new User();
-//Object类型
-System.out.println(User.class);       //class com.example.json.model.User
-System.out.println(user.getClass());  //class com.example.json.model.User
-
-//List类型
-List<User> userList = new ArrayList<>();
-System.out.println(userList.getClass()); //class java.util.ArrayList
-System.out.println(List.class);          //interface java.util.List
-System.out.println(List<User>.class);       //错误
-
-//List<User>类型 json提供
-TypeReference<List<User>> typeReference = new TypeReference<List<User>>() {};
-System.out.println(typeReference.getType());//java.util.List<com.example.json.model.User>
-```
-
-由此可见，new TypeReference<T>() {} 可以获取类型
-
-##### 4.2.2 类型传递
-
-| 实参                    | 形参                  | 场景                          |
-| ----------------------- | --------------------- | ----------------------------- |
-| User.class              | Class<T> clazz        | 1.获取实例；2.获取类型clazz   |
-| new TypeReference<User> | TypeReference<T> type | 获取类型，如 User、List<User> |
-|                         |                       |                               |
-
-
-
-
-
-
-
-
-
 
 
