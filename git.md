@@ -26,10 +26,10 @@ git add .
 git commit -m "init" #提交到本地仓库，并自动创建分支本地分支master
 git branch -M ${BranceName} #重命名当前分支：一般是master、develop（不用）
 #3.新建远程仓库：github上创建
-git remote add orgin ${url} #在本地重命名远程仓库
+git remote add origin ${url} #在i本地重命名远程仓库
 git remote -v #查看
-#4.创建远程分支并连接
-git push orgin ${OriginBranceName} #本地推送到远程，如果远程没有此分支则自动创建，与本地同名，第一次一般为master
+#4.创建远程分支并连接i
+git push origin ${OriginBranceName} #本地推送到远程，如果远程没有此分支则自动创建，与本地同名，第一次一般为master
 git branch -u origin/${OriginBranceName}#追踪远程（本地与远程建立联系）
 git branch -vv #查看本地与远程分支关系
 ```
