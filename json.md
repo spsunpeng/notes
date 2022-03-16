@@ -13,12 +13,19 @@ List<User> userList = new ArrayList<>();
 
 | source   | target   | to                                                           |
 | -------- | -------- | ------------------------------------------------------------ |
-| String   | Object   | objectMapper.readValue(string, User.class) <br />objectMapper.readValue(string, new TypeReference<List<User>>() { }) |
-| String   | JsonNode | objectMapper.readTree(string);  (string必须是json，否则报错) |
+| String   | Object   | objectMapper.readValue(string, User.class) <br />objectMapper.readValue(string, new TypeReference<List<User>>() { })<br/>**注意1：string中的字段许少不许多** |
+| String   | JsonNode | objectMapper.readTree(string);<br/>**补充：通过jsonNode.get(string)方法也可以取出字段值** |
 | Object   | String   | objectMapper.writeValueAsString(user)                        |
 | Object   | JsonNode | objectMapper.valueToTree(string);                            |
 | JsonNode | Object   | 目前没用到                                                   |
 | JsonNode | String   | toString                                                     |
+
+#### 1.2 配置
+
+```java
+//忽略josnString中存在，对象中不存在的情况
+objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+```
 
 
 

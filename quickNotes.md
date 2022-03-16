@@ -1,4 +1,4 @@
-# 2020-09
+#  2020-09
 
 #### 1、StringUtils判空
 
@@ -286,7 +286,7 @@ supplier-access.nmyvirtual.hobby=women    //必须配置
 
 先移除再删除
 
-
+synchronized
 
 # 2021-08
 
@@ -305,7 +305,255 @@ supplier-access.nmyvirtual.hobby=women    //必须配置
 
 # 2021-09
 
-hello world
+### 1、springboot自启动
+
+-  自启动程序不影响主程序
+
+- 自启动程序默认执行顺序为无序，可以通过@Order(value=number)配置，数字越小优先级越高，不配置则优先级最低
+
+
+
+### 2、日志
+
+#### 2.1 jpa日志
+
+jpa底层是Hibernate，在sql日志方面整合的不好。
+
+##### 2.1.1 开启日志
+
+```yaml
+spring:
+  jpa:
+  	#配置在日志中打印出执行的 SQL 语句信息。
+    show-sql: true
+    #漂亮地打印
+    properties:
+      hibernate:
+        format_sql: true
+    
+```
+
+结果：
+
+![image-20210928153106219](quickNotes.assets/image-20210928153106219.png)
+
+可以看出hibernate打印出的日志并不遵照logback格式，日志级别配置也无用。
+
+##### 2.1.2 整合logback
+
+在logback.xml中配置
+
+```xml
+    <!-- 1. 输出SQL 到控制台和文件-->
+    <logger name="org.hibernate.SQL" additivity="false" >
+        <level value="DEBUG" />
+        <appender-ref ref="file" />
+        <appender-ref ref="console" />
+    </logger>
+<!--    &lt;!&ndash; 2. 输出SQL 的参数到控制台和文件&ndash;&gt;-->
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" additivity="false" level="TRACE" >
+        <level value="TRACE" />
+        <appender-ref ref="file" />
+        <appender-ref ref="console" />
+    </logger>
+```
+
+这样hibernate打印出的日志就整合进logback中，若要配置日志级别，可以：
+
+```yaml
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: debug
+        type:
+          descriptor:
+            sql:
+              BasicBinder: trace
+```
+
+#### 2.2 mybatis日志
+
+mybatis日志只用将配置dao层的日志级别调整成debug就行
+
+```yaml
+logging:
+  level:
+  	com.demo.dao: debug
+```
+
+
+
+token
+
+是否支持多个token
+
+缓存
+
+
+
+# 2021-11
+
+### 1、依赖
+
+就近原则
+
+按顺序依赖
+
+### 2、String
+
+stringbuffer是线程安全的
+
+stringbuilder 速度快
+
+
+
+### 3、 继承类型转换
+
+```java
+Parent parent = new Parent();
+Son son = new Son();
+// 子类继承父类，子类包含的信息比父类多，
+// 所以子类可以全全接受父类的信息
+// 而父类如果要接受子类的信息，那么子类独有的字段就不能接受，父类实例无法无法指向子类示例
+Son = parent; //正确
+parent = son; // 编译错误，对象无法转换
+parent = (Parent)son; // 运行错误，对象无法转换
+
+Parent parent = new Son(); 
+parent = (Parent)son; //只有这样才是正确的，多态的用法。具体原理可以查看C++笔记
+
+//实例
+public GetTownResponse getTown(String districtCode) {
+    return (GetTownResponse)this.getChildRegion(districtCode, new GetTownResponse());
+}
+private RegionListVo getChildRegion(String parentCode, RegionListVo regionListVo){
+    List<Region> regionList = regionRepository.findByParentCode(parentCode);
+    List<RegionVo> regionVoList = BeanCopyUtil.copyListProperties(regionList, RegionVo::new);
+    regionListVo.setRegionVoList(regionVoList);
+    return regionListVo;
+}
+```
+
+
+### 4、springmvc_header
+
+```java
+//入参 三种方式
+@RequestHeader HttpHeaders headers
+@RequestHeader MultiValueMap<String, String> headers
+@RequestHeader String authorization
+
+//取
+String[] tokens = headers.get("token")
+String token = header.getFirst("token")
+```
+
+### 5、json反序列化
+
+string -> object 是， string的字段许少不许多
+
+### 6、字符串切割
+
+当字符串以"."作为分隔符时，split方法会认为"."是正则表达式，需要转义再转义，eg:
+
+```java
+str.split("\\.")
+```
+
+
+
+### 7、bbc框架
+
+![image-20211117162150971](quickNotes.assets/image-20211117162150971.png)
+
+各服务定义切点，实际处理类在core.aop包下，切面功能：
+
+- 打印日志：一般时controller、fegin层 request、resopnse
+- 处理异常：服务方状态是否良好
+
+
+
+### 8、bbc框架的日志
+
+```java
+feign.slf4j.Slf4jLogger //fegin日志
+org.apache.ibatis.logging.jdbc.BaseJdbcLogger //sql日志
+com.slodon.bbc.core.aop.WebExceptionHandler //controller日志    
+```
+
+
+
+### 9、.gitgnore
+
+- 空行或是以#开头的行即注释行将被忽略；
+- 以斜杠 “/” 结尾表示目录；
+- 以星号 “*” 通配多个字符；
+- 以问号 “?” 通配单个字符
+- 以方括号 “[]” 包含单个字符的匹配列表；
+- 以叹号 “!” 表示不忽略(跟踪)匹配到的文件或目录；
+- 可以在前面添加斜杠 “/” 来避免递归,下面的例子中可以很明白的看出来与下一条的区别。
+
+公司项目中的配置
+
+```
+##############自定义
+/src/main/resources/application.properties
+/src/main/resources/logback.xml
+/src/test/
+```
+
+
+
+
+
+# 2022-02
+
+### 1、postman
+
+#### 1.1 pre
+
+```js
+const req = {
+  url: 'https://bplusdev.sinosun.com:18180/mallvop/auth/v1/fastGetAccessToken?channelId=1001',
+  method: 'GET'
+};
+
+pm.sendRequest(req, function (err, res) {
+  console.log(err ? err : res.json());
+  var token = res.json().result.accessToken;
+  token = "Bearer "+token;
+  pm.globals.set("token", token);
+});
+```
+
+#### 1.2 test
+
+```sh
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+var jsonData = JSON.parse(responseBody)
+pm.environment.set("vop_open_token", "Bearer "+jsonData.result.accessToken);
+```
+
+#### 1.3 图片
+
+![postman上传图片](quickNotes.assets/postman上传图片.png)
+
+
+
+### 2、static是沟通容器与非容器的桥梁
+
+
+
+
+
+
+
+
+
+
 
 
 

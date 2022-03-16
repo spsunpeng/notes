@@ -461,7 +461,7 @@ base64：编解码，不是加密，所以可以反解码
 
 
 
-### 2020.1.28
+### 2021.01.28
 
 #### 1、token校验
 
@@ -631,27 +631,56 @@ public @interface WebLog {
 
 
 
+### 2021.11
+
+#### 1、jwt
+
+- 用token替代sessionid，替代账户密码
+
+- JWT由三部分组成（Header,Payload,Signature）
+  - Header和Payload部分使用的是Base64编码，几乎等于明文
+  - Signature部分是根据header+payload+secretKey进行加密算出来的，如果Payload被篡改，就可以根据Signature解密时候校验。
+
+- token自解释，不用另外存储
+- token如果要实现续时，这就需要存储了，一般存在redis中
+- 单点登录的核心是手机每一标识
+- jwt无法保证信息不泄露，它保证的是token不被篡改
+
+#### 2、加密协议
+
+- 散列加密
+- 对称加密
+- 非对称加密
+
+https就是用了加密协议的http
+
+#### 3、 打包执行（未实践）
+
+- 用maven打包
+- 依赖的包要install
+- 最底层的包要达成可执行的包（加标签）
 
 
 
 
 
+域名解析过程
+
+1. 浏览器缓存
+2. 操作系统缓存（hosts）
+3. LDNS（本地域名解析）
+4. 根据名
+5. 主域名服务器
+6. 具体域名服务器
+7. 缓存
 
 
 
+system日志级别
 
+org.apache.ibatis.logging.jdbc.BaseJdbcLogger
 
-
-
-
-
-
-
-
-
-
-
-
+com.slodon.bbc.core.aop.WebExceptionHandler
 
 
 

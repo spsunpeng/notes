@@ -92,7 +92,7 @@
 
 ![idea导包方式3](D:\Git\gitRepository\studyNotes\myNotes\pictures\javaWeb\idea导包方式3.png)
 
-###### 1.5.1 HelloController.java
+###### 1.5.1 HelloController
 
 ```java
 public class HelloController implements Controller {

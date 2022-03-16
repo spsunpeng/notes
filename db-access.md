@@ -16,7 +16,7 @@ JDBC（Java DataBase Connectivity,  Java数据库连接） ,是一种用于执�
 
 SUN公司是JDBC规范制定者（连接数据库规范），数据库厂商都遵守这个规范。从代码角度上说，jdbc就是接口，数据库提供jar包实现这些接口。
 
-![JDBC](数据库连接.assets/JDBC.png)
+![JDBC](db-access.assets/JDBC.png)
 
 
 
@@ -617,6 +617,30 @@ spring:
 ##### 6.1 mysql版本
 
 mysql server 5.7   <==> mysql-connector-java 5.1.17 <==>  driver: com.mysql.jdbc.Driver
+
+
+
+### 2、其他
+
+2.1 自动更新时间
+
+```java
+import javax.persistence.EntityListeners;
+import javax.persistence.MappedSuperclass;
+import java.util.Date;
+
+@EntityListeners(AuditingEntityListener.class)
+@MappedSuperclass
+public class BaseEntity {
+    @CreatedDate
+    private Date createTime;
+    @LastModifiedDate
+    private Date updateTime;
+}
+
+//在application类上加上此注解
+@EnableJpaAuditing
+```
 
 
 

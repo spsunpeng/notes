@@ -1,106 +1,90 @@
+
+
+# 当下
+
+## 1、启动rabbitmq
+
+```sh
+cd /etc/local/rabbitmq/sbin
+./rabbitmq-plugins enable rabbitmq_management #启动web
+./rabbitmq-server -detached #后台启动，没有启动成功返回，只有一行警告日志
+#访问：10.1.20.122:15672
+```
+
+注意：有ip配置，一旦虚拟机迁移或者网络变动，需要重新配置ip
+
+
+
 # 一、rabbitmq
 
 ## 1、安装
 
-### 1.1 安装Erlang
-
-RabbitMQ是使用Erlang语言编写的，所以需要先配置Erlang
-
 ```sh
-#1.修改主机名
+#--------------------------------一、主机名映射-------------------------
+#RabbitMQ是通过主机名进行访问的，必须指定能访问的主机名
 vim /etc/sysconfig/network
-# NETWORKING=yes
-# HOSTNAME=smallming
+	NETWORKING=yes
+	HOSTNAME=smallming
 vim /etc/hosts 
-# 10.1.20.89 smallming
+	10.1.20.122 smallming
 
-#2 安装依赖
+
+
+#-------------------------------二、安装Erlang-------------------------
+#1.资源
 yum -y install make gcc gcc-c++ kernel-devel m4 ncurses-devel openssl-devel unixODBC unixODBC-devel
-
-#3 上传并解压
-cd /usr/local/tmp
+cd /usr/local/tmp #3 上传并解压
 tar xf otp_src_22.0.tar.gz #解压时注意，此压缩包不具有gzip属性，解压参数没有z，只有xf
-
-#4 配置参数
+#2.配置
 mkdir -p /usr/local/erlang
 cd otp_src_22.0
 ./configure --prefix=/usr/local/erlang --with-ssl --enable-threads --enable-smp-support --enable-kernel-poll --enable-hipe --without-javac # 配置参数
-
-#5 编译并安装
+#3. 编译并安装
 make #编译 
 make instal #安装
-
-#6 修改环境变量
+#4.修改环境变量
 vim /etc/profile #export PATH=$PATH:/usr/local/erlang/bin
 source /etc/profile #运行文件，让修改内容生效
-
-#7 查看配置是否成功
+#5.查看配置是否成功
 erl -version
-```
-
-![](消息中间件.assets/RabbitMQ-08.jpg)
 
 
-
-### 1.2 安装RabbitMQ
-
-​	上传rabbitmq-server-generic-unix-3.7.18.tar.xz到/usr/loca/tmp中
-
-```sh
-vim /etc/profile
-
-#1 上传并解压
+#----------------------------------三、安装RabbitMq---------------------------
+#1.资源
 #上传rabbitmq-server-generic-unix-3.7.18.tar.xz到/usr/loca/tmp中
 cd /usr/local/tmp
 tar xf rabbitmq-server-generic-unix-3.7.18.tar.xz
-
-#2 复制到local下
 cp -r rabbitmq_server-3.7.18 /usr/local/rabbitmq
-
-# 3 配置环境变量
-vim /etc/profile #export PATH=$PATH:/usr/local/rabbitmq/sbin
+#2.配置环境变量
+vim /etc/profile 
+	export PATH=$PATH:/usr/local/rabbitmq/sbin
 source /etc/profile
-
-#4 开启web管理插件
+#3.开启web管理插件
 cd /usr/local/rabbitmq/sbin
 ./rabbitmq-plugins list #查看插件列表
 ./rabbitmq-plugins enable rabbitmq_management #生效管理插件
-
-#5 后台运行
+#4.后台运行
 ./rabbitmq-server -detached #启动rabbitmq
 ./rabbitmqctl stop_app #停止命令，如果无法停止，使用kill -9 进程号进行关闭
-
-#6 查看web管理界面
-#url: http://端口号:15672 （放行端口，或关闭防火墙）
-#默认可以在安装rabbitmq的电脑上通过用户名：guest密码guest进行访问web管理界面
-#虚拟机外的主机无法通过guest访问
-```
+#5.查看web管理界面
+#http://端口号:15672 （放行端口，或关闭防火墙）
+#默认用户：guest:guest，但虚拟机外的主机无法通过guest用户访问，需要新建用户
 
 
-
-### 1.3 RabbitMq账户管理
-
-由于虚拟机外的主机无法通过guest访问，所系需要新建用户
-
-```sh
-#1 创建账户
+#-------------------------------------四、RabbitMq账户管理--------------------------
+#1.创建账户
 cd /usr/local/rabbitmq/sbin
 ./rabbitmqctl add_user mashibing mashibing
-
-#2 给用户授予管理员角色
+#2.给用户授予管理员角色
 ./rabbitmqctl set_user_tags mashibing administrator
-
-#3 给用户授权
+#3.给用户授权
 ./rabbitmqctl set_permissions -p "/" mashibing ".*" ".*" ".*"
-# “/” 表示虚拟机
-# mashibing 表示用户名
-# ".*" ".*" ".*" 表示完整权限
-
-#4 登录
-#url http://ip:15672/
-#用户名：mashibing
-#密码：mashibing
+# “/” 表示虚拟机, mashibing 表示用户名, ".*" ".*" ".*" 表示完整权限
+#4.登录
+#url http://ip:15672/ mashibing:mashibing
 ```
+
+
 
 
 
@@ -322,7 +306,7 @@ public void demo7(String msg, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG)
 
 注三：异常时的生命周期
 
-![rabbitmq队列](消息中间件.assets/rabbitmq队列.png)
+![rabbitmq队列](mq.assets/rabbitmq队列.png)
 
 注四：自动确认和手动确认
 

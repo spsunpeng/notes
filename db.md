@@ -1,5 +1,11 @@
 ## MySQl
 
+1、安装
+
+2、navicat
+
+3、sql
+
 ### 安装
 
 ### 启动
@@ -69,8 +75,6 @@ use databasesName; 进入表中
 删：delete from tableName where id>2;
 
 查：select * from tableName;
-
-  select */属性 from tableName where 条件1 or/and 条件2；
 
 改：update tableName set name="sunyue" where id=1;
 
@@ -197,19 +201,24 @@ alter table table_name drop index index_name ;
 
 ### Navicat快捷键
 
-| **快捷键**    | **功能**                                                     |
-| ------------- | ------------------------------------------------------------ |
-| ctrl+F        | 搜索本页数据                                                 |
-| Ctrl+Q        | 打开查询窗口                                                 |
-| Ctrl+/        | 注释sql语句                                                  |
-| Ctrl+Shift +/ | 解除注释                                                     |
-| Ctrl+R        | 运行查询窗口的sql语句                                        |
-| Ctrl+Shift+R  | 只运行选中的sql语句                                          |
-| F6            | 打开一个mysql命令行窗口                                      |
-| Ctrl+L        | 删除一行                                                     |
-| Ctrl+N        | 打开一个新的查询窗口                                         |
-| Ctrl+W        | 关闭一个查询窗口                                             |
-| Ctrl+D        | 表的数据显示显示页面切换到表的结构设计页面，但是在查询页面写sql时是复制当前行 |
+| **快捷键**                                         | **功能**                     |
+| -------------------------------------------------- | ---------------------------- |
+| Ctrl+Q/N                                           | 打开一个新的查询窗口         |
+| Ctrl+W                                             | 关闭一个查询窗口             |
+| F6                                                 | 打开一个mysql命令行窗口      |
+|                                                    |                              |
+| Ctrl+/                                             | 注释sql语句                  |
+| Ctrl+Shift +/                                      | 解除注释                     |
+|                                                    |                              |
+| Ctrl+r                                             | 运行选中的sql语句            |
+| 1.定位到行首(home)， 2.从行首连选到行尾(Shift+end) | 选中当前行{从行首连选到行尾} |
+|                                                    |                              |
+| Ctrl+L                                             | 删除一行                     |
+| Ctrl+D                                             | 复制当前行                   |
+|                                                    |                              |
+|                                                    |                              |
+
+
 
 
 
@@ -352,7 +361,7 @@ Delete from t_basedata_dictdata where bd_type=6 and parent_bd_code=-1 and bd_cod
 
 (select bd_code from (select bd_code from t_basedata_dictdata where bd_type=7 and parent_bd_code=-1) bc)
 
-将查询到的bd_code重命名为bc，然后再查询。但不明白为社么这么做
+将查询到的bd_code重命名为bc，然后再查询。但不明白为什么这么做
 
 
 
@@ -360,6 +369,88 @@ Delete from t_basedata_dictdata where bd_type=6 and parent_bd_code=-1 and bd_cod
 
 ```sql
 select * from table_name LIMIT ?, ?
-#第一个问好表示从第几个开始，第二个问好表示查询几个
+--第一个问好表示从第几个开始，第二个问好表示查询几个
 ```
+
+
+
+
+
+### 事务
+
+```sql
+show variables like "%%"
+select @@autocommit --查询是否自动开启
+set autocommit=1  --设置自动开启
+
+start TRANSACTION --开启事务
+ROLLBACK -- 回滚
+COMMIT --提交事务
+
+SELECT @@transaction_isolation --查询隔离级别
+set session transaction isolation level read uncommitted; --设置隔离级别
+```
+
+
+
+
+
+事务
+
+原子性
+
+隔离性
+
+
+
+- 第1级别：Read Uncommitted(读取未提交内容)
+- 第2级别：Read Committed(读取提交内容)
+- 第3级别：Repeatable Read(可重读)
+- 第4级别：Serializable(可串行化)
+
+
+
+未授权读取 Lost update ： **有一个事务正在改行其他的就不能再改行**
+
+Read Uncommitted(读取未提交内容)
+
+- 原因：事务B在事务A执行时更改了数据，导致事务B的修改没生效
+- 解决方法：行锁，写锁 
+
+- 出现此问题时：Lock wait timeout exceeded; try restarting transaction
+
+脏读 Dirty Reads  : **没有提交就不真的去改行**
+
+- 原因：事务A在事务B执行时读取数据，但是实际事务B发生了回滚，导致事务B读取的是脏数据
+- 解决方法：行锁，读锁（有修改时不可读）
+
+不可重复度 Non-repeatable Reads ： **没有提交就不真的去读行**
+
+- 事务A在事务B执行时，前后读取数据的结果不一样
+- 解决方法：行锁，读锁（事务未完成不可读）
+
+幻读 ：**有一个事务正在读库其他的就不能再改库**
+
+- 原因：统计数据时得到的结果不一致，和不可重复度的不同点在于，他涉及整个表
+- 解决方法：表锁，读锁
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

@@ -1,3 +1,31 @@
+## 使用
+
+目前在虚拟机上已搭建好环境，使用步骤
+
+```sh
+###1.启动fastDFS+nginx
+service fdfs_trackerd start #启动trackerd，查询状态：service fdfs_trackerd status
+service fdfs_storaged start #启动storaged，查询状态：service fdfs_storaged status
+/usr/local/nginx/sbin/nginx #启动nginx
+
+###2.启动程序
+#启动程序: F:/java/code/microservice/fastDFS/PictureApplication
+
+###3.测试
+#上传：使用postman上传图片
+#访问：使用浏览器访问图片地址
+```
+
+
+
+## 犯错
+
+- 本机（虚拟机）ip变化
+
+  配置文件中追踪的tracker_server ip变化，且更改完后需要重启storage，不然配置不生效
+
+
+
 ## 1、简介
 
 ### 1.1 图片服务器
@@ -10,9 +38,11 @@
 
 ​        针对上面问题可以搭建单独的图片服务器，专门做图片存储及图片访问的。而想要搭建图片服务器就需要应用图片存储技术/工具。
 
+
+
 ### 1.2 分布式文件系统
 
-#### 1.1   通用分布式文件系统
+通用分布式文件系统：
 
 ​	通用分布式文件系统和传统的本地文件系统（如ext3、NTFS等）相对应。典型代表：lustre、MooseFS
 
@@ -21,7 +51,7 @@
   - 系统复杂性较高，需要支持若干标准的文件操作，如：目录结构、文件读写权限、文件锁等。复杂性更高。
   - 系统整体性能有所降低，因为要支持POSIX标准（表示[可移植操作系统接口](https://baike.baidu.com/item/可移植操作系统接口/12718298)（Portable Operating System Interface of UNIX），POSIX标准定义了操作系统应该为应用程序提供的接口标准）
 
-#### 1.2   专用分布式文件系统
+专用分布式文件系统：
 
 ​	基于google File System的思想，文件上传后不能修改。需要使用专有API对文件进行访问，也可称作分布式文件存储服务。典型代表：MogileFS、FastDFS、TFS。
 
@@ -47,7 +77,7 @@
 
 
 
-##  2、FastDFS架构
+##  2、架构
 
 ### 2.1 架构图
 
@@ -149,31 +179,33 @@ cd /etc/fdfs
 cp storage.conf.sample storage.conf #storage.conf.sample只是示例文件，需要创建配置文件
 mkdir -p /usr/local/fastdfs/storage/base #base用于存储基础数据和日志
 mkdir -p /usr/local/fastdfs/storage/store #store用于存储上传数据。
-vim /etc/fdfs/storage.conf #3.4.1 配置文件
-	base_path=/usr/local/fastdfs/storage/base
-	store_path0=/usr/local/fastdfs/storage/store
-	tracker_server=tracker 服务IP：22122
+vim /etc/fdfs/storage.conf
+	base_path=/usr/local/fastdfs/storage/base #基础路径。用于保存 基础数据内容和日志内容的目录
+	store_path0=/usr/local/fastdfs/storage/store #存储路径。真正保存图片的地方。
+	tracker_server=tracker 服务IP：22122 #跟踪服务器位置。就是跟踪服务器的IP（本机ip）和端口
 
 ###启动
-service fdfs_storaged start #3.4.2 启动服务
+service fdfs_storaged start
 service fdfs_storaged status
 ```
 
-#### 3.4.1 配置文件
+​	启动成功后，配置文件中base_path 指向的目录中出现FastDFS服务相关数据目录（data目录、logs目录）配置文件中的store_path0指向的目录中同样出现FastDFS存储相关数据录（data目录）。其中$store_path0/data/目录中默认创建若干子孙目录（两级目录层级总计256*256个目录），是用于存储具体文件数据。Storage 服务器启动比较慢，因为第一次启动的时候，需要创建256*256个目录。
 
-base_path - 基础路径。用于保存storage server 基础数据内容和日志内容的目录。
+### 3.5 配置client并上传文件
 
-store_path0 - 存储路径。是用于保存FastDFS中存储文件的目录，就是要创建256*256个子目录的位置。
+```sh
+###配置storage.conf
+cd /etc/fdfs
+cp client.conf.sample client.conf #client.conf.sample只是示例文件，需要创建配置文件
+mkdir -p /usr/local/fastdfs/client
+vim /etc/fdfs/client.conf #3.4.1 配置文件
+	base_path=/usr/local/fastdfs/client
+	tracker_server=tracker服务IP：22122
 
-base_path 和 store_path0 可以使用同一个目录。
-
-tracker_server - 跟踪服务器位置。就是跟踪服务器的IP和端口。
-
-#### 3.4.2 启动服务
-
-​	启动成功后，配置文件中base_path 指向的目录中出现FastDFS服务相关数据目录（data目录、logs目录）配置文件中的store_path0指向的目录中同样出现FastDFS存储相关数据录（data目录）。其中$store_path0/data/目录中默认创建若干子孙目录（两级目录层级总计256*256个目录），是用于存储具体文件数据的。
-
-​	Storage 服务器启动比较慢，因为第一次启动的时候，需要创建256*256个目录。
+###上传文件
+/usr/bin/fdfs_upload_file /etc/fdfs/client.conf  /要上传的文件
+###返回group1/M00/00/00/wKiWDV0xfqWAFe1OAAAib-i5DLU637.log，含义见4.0
+```
 
 
 
@@ -480,17 +512,15 @@ try {
 
 
 
-## 5、nginx
+## 5、nginx+fastdfs
 
-### 5.1 简介
+### 5.1 nginx简介
 
 ​	FastDFS是没有文件访问功能的，需要借助其他工具实现图片HTTP访问的。Nginx就具备代理虚拟机主机功能。
 
 ​	Nginx (engine x) 是一个高性能的[HTTP](https://baike.baidu.com/item/HTTP)和[反向代理](https://baike.baidu.com/item/反向代理/7793488)服务。Nginx是由伊戈尔·赛索耶夫为[俄罗斯](https://baike.baidu.com/item/俄罗斯/125568)访问量第二的Rambler.ru站点（俄文：Рамблер）开发的，第一个公开版本0.1.0发布于2004年10月4日。
 
 ​	Nginx 是一个很强大的高性能[Web](https://baike.baidu.com/item/Web/150564)和[反向代理](https://baike.baidu.com/item/反向代理)服务，它具有很多非常优越的特性：在连接高并发的情况下，Nginx是[Apache](https://baike.baidu.com/item/Apache/6265)服务不错的替代品：Nginx在美国是做虚拟主机生意的老板们经常选择的软件平台之一。
-
-#### 5.2  Nginx作用
 
 - HTTP协议代理
 
@@ -506,7 +536,7 @@ try {
 
 
 
-## 6、nginx+fastdfs安装
+### 5.2 nginx+fastdfs安装
 
 ```sh
 ###上传安装fastdfs-nginx-module
@@ -572,7 +602,7 @@ cd /usr/local/nginx/conf
 vim nginx.conf
 	user root #第一处
 	server{ #第二处
-      listen 8888; #storage 配置中，有http.server_post=8888的配置信息，必须一致。
+        listen 8888; #storage 配置中，有http.server_post=8888的配置信息，必须一致。
         server_name localhost;
         location ~/group([0-9])/M00{
           ngx_fastdfs_module;
@@ -583,11 +613,16 @@ vim nginx.conf
 cd /usr/local/nginx/sbin/ 
 ./nginx  #启动
 ./nginx -s quit #停止
+
+###测试
+#外网访问nginx，如：10.1.20.122:8888
+#如果遇到pid报错，修改nginx.conf中的pid即可，具体情况具体百度
+
+###使用
+#外网直接访问资源。如：http://10.1.20.122:8888/group1/M00/00/00/CgEUemIEupiAW4SRAABDL9dNGRU688.png
 ```
 
-
-
-### 6.1 注一
+- **注一**
 
 修改配置文件中第四行，把路径中local去掉。参数是用于配置安装nginx中的FastDFS组件的时候，在什么位置查找FastDFS核心代码。
 
@@ -595,13 +630,13 @@ cd /usr/local/nginx/sbin/
 
 ![](fastdfs.assets/FastDFS+NGINX-09.jpg)
 
-### 6.2 注二
+-  **注二**
 
 --add-module 必须定义，此配置信息是用于指定安装Nginx时需要加载的模块，如果未指定，Nginx安装过程不会加载fastdfs-nginx-module模块，后续功能无法实现。
 
 如果没有权限，为此文件夹设置权限，chomd 777 /usr/local/nginx -R
 
-### 6.3 注三
+- **注三**
 
 ​	需要修改文件中四处内容， 这四处内容的含义：
 
@@ -624,31 +659,9 @@ store_path0=/usr/local/fastdfs/storage/store
 
 
 
-## 7、分布式图片demo
 
-### 7.1 启动依赖组件
 
-```sh
-#启动fdfs
-service fdfs_storaged start #启动storaged
-service fdfs_storaged status
-service fdfs_trackerd start #启动trackerd 
-service fdfs_trackerd status
 
-#启动nginx
-cd /usr/local/nginx/sbin/ 
-./nginx  
-```
-
-### 7.2 前端
-
-使用KindEditor技术，KindEditor是基于JavaScript的插件。里面包含了丰富的组件，如：多文件上传组件、富文本编辑框。
-
-代码在fastDFS，浏览器缺少插件未测试。
-
-### 7.3 后端
-
-代码在fastDFS，浏览器缺少插件未测试。
 
 
 

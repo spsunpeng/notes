@@ -31,7 +31,9 @@
 
    -n, --number   对输出的所有行编号,由1开始对所有输出的行数编号
 
-   
+refreshSkuInfo
+
+
 
 ### 二、过滤 grep
 
@@ -148,14 +150,16 @@ tcping {ip} {port}
 
 
 
-### 五、环境搭建docker
-
-#### 1.虚拟机安装
+### 五、虚拟机
 
 - VMware：好像需要破解
 - VirtualBox6.3：好像开源，Oracle的，官网下载
 
-#### 2.linux安装
+
+
+### 六、linux
+
+#### 1、centos8.2
 
 - CentOS-8.0：好像开源，下载地址：http://mirrors.163.com/【网易镜像地址】
 
@@ -166,6 +170,29 @@ tcping {ip} {port}
   - 操作系统配置：选择存储、root用户设置 -》重启
   - 个性化设置：等等。
   - 网络设置：1.网络设置； 2.网络配置文件修改
+
+#### 1.1 网络
+
+#### 1.2 yum
+
+```sh
+###安装新源
+#特别是：centos8官方源已下线，需要切换centos-vault源
+mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup #备份原有
+wget -O /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-6.repo #安装信源
+yum clean all #跟新缓存
+yum makecache #如提示AppStream下载失败，更新文件CentOS-AppStream.repo
+
+###更新CentOS-AppStream.repo
+#centos8相比centos7多了CentOS-AppStream.repo，所以centos8换源后还要更新CentOS-AppStream.repo
+#将CentOS-Base.repo中的[AppStream]复制到CentOS-AppStream.repo
+```
+
+
+
+
+
+### 七、docker
 
 #### 3.docker安装
 
@@ -296,7 +323,7 @@ speedtest.py #任意位置执行
 
 
 
-### 六、其他软件安装
+### 其他软件安装
 
 #### 1、jdk
 
