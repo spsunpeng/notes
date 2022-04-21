@@ -553,6 +553,63 @@ pm.environment.set("vop_open_token", "Bearer "+jsonData.result.accessToken);
 
 
 
+vmware 15.5 
+
+xshell
+
+centos7x64 1810
+
+{
+  "content": "各企业中会员列表",
+  "grade": 4,
+  "pid": -1,
+  "roleId": 1,
+  "state": 1,
+  "url": "/v3/member/admin/member/inCompanyList"
+}
+
+{
+  "content": "会员详情列表",
+  "grade": 4,
+  "pid": -1,
+  "roleId": 1,
+  "state": 1,
+  "url": "/v3/member/admin/member/detailList"
+}
+
+
+
+
+
+
+
+zsa-adapter、presign 迁移至bizcloud，sdk变更，依赖他俩的服务总结如下，未总结到的麻烦服务负责人告知我
+
+|             | media                    | ledgermate |
+| ----------- | ------------------------ | ---------- |
+| zsa-adapter | notice、customer-profile | 无         |
+| presign     | category                 | 无         |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

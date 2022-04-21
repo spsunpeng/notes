@@ -84,7 +84,7 @@ grep  -参数  "字段"  filename
 
 5）分页分屏：k8s中的vi也支持分页/分屏操作
 
-
+6) 全局替换：:%s/from/to/g
 
 
 
@@ -124,13 +124,16 @@ ifconfig  #查询ip
 #其他
 uname -v  #查询虚拟机内核版本
 
-#启停防火墙
-systemctl status firewalld  # 查看状态
-systemctl start firewalld # 开启
-systemctl stop firewalld # 关闭 
-systemctl is-enabled firewalld # 查看服务是否开机启动
-systemctl disable firewalld # 开机禁用
-systemctl enable firewalld # 开机启用
+#系统配置
+#目前app: firewalld mysqld docker
+systemctl status [app]  # 查看状态
+systemctl start [app] # 开启
+systemctl stop [app] # 关闭 
+systemctl restart [app] #重启
+systemctl is-enabled [app] # 查看开机是否启动
+systemctl disable [app] # 关闭开机启用
+systemctl enable [app] # 开机启用
+
 
 #网络配置
 cd /etc/sysconfig/network-scripts #网络配置文件位置
@@ -153,7 +156,187 @@ tcping {ip} {port}
 ### 五、虚拟机
 
 - VMware：好像需要破解
+
 - VirtualBox6.3：好像开源，Oracle的，官网下载
+
+
+
+no  default or ui configuration directive found
+
+/isolinux/vmlinuz initrd=/isolinux/initrd.img
+
+
+## Centos
+
+- 新建虚拟机
+  - 选择系统安装位置，系统类型，系统版本：red hat(64-bit)
+  - 选择内存大小
+  - 现在创建虚拟硬盘，文件类型选择VDI，动态分配，虚拟硬盘位置不要选在C盘
+
+- 配置安装
+  - 存储 -》没有盘片 -》分配光驱 -》选择本地的iso
+  - 系统 -》启动顺序 -》把光驱排在第一个
+
+- 安装
+  - 确定安装，安装语言选择中文（这里设置的仅仅是安装语言）
+  - 安装位置 -》 本地标准盘 -》 自动分配分区 -> 完成 -》 开始安装
+  - root密码 -》 root:root -》完成 -》重启
+
+```sh
+#网络：桥接模式
+#网卡:开机启动，将动态获取ip改为静态获取
+ip addr #10.1.20.89
+vi /etc/sysconfig/network-scripts/ifcfg-enp0s3
+TYPE=Ethernet 						
+	PROXY_METHOD=none
+	BROWSER_ONLY=no
+	BOOTPROTO=static
+	IPADDR=10.1.20.89
+	NETMASK=255.255.255.0
+	GATEWAY=10.1.20.1
+	DNS1=114.114.114.114
+	DEFROUTE=yes
+	IPV4_FAILURE_FATAL=no
+	IPV6INIT=yes
+	IPV6_AUTOCONF=yes
+	IPV6_DEFROUTE=yes
+	IPV6_FAILURE_FATAL=no
+	IPV6_ADDR_GEN_MODE=stable-privacy
+	NAME=enp0s3                           
+	UUID=b351fca8-3596-4168-a35f-cc927c09e2c4
+	DEVICE=enp0s3
+	ONBOOT=yes                       
+nmcli connection reload #centos7重载网卡
+systemctl restart network #centos8重载网卡
+
+#关闭防火墙
+systmectl stop firewalld    # 关闭
+systmectl disable firewalld # 关闭开机启用
+
+#下载vim
+yum -y install vim*
+
+#版本
+cat /etc/redhat-release #CentOS Linux release 7.9.2009 (Core)
+uname -r  #3.10.0-1160.el7.x86_64
+#内存：2g
+#存储：50g
+#网络：桥接模式
+
+vim ~/.bashrc
+	PS1='\[\e[35;40m\][\u@\h \w]\$: \[\e[m\]'
+		\d ：#代表日期，格式为weekday month date，例如："Mon Aug 1"
+		\H ：#完整的主机名称
+		\h ：#仅取主机的第一个名字
+		\t ：#显示时间为24小时格式，如：HH：MM：SS
+		\T ：#显示时间为12小时格式
+		\A ：#显示时间为24小时格式：HH：MM
+		\u ：#当前用户的账号名称
+		\v ：#BASH的版本信息
+		\w ：#完整的工作目录名称
+		\W ：#利用basename取得工作目录名称，所以只会列出最后一个目录
+		\# ：#下达的第几个命令
+		\$ ：#提示字符，如果是root时，提示符为：# ，普通用户则为：$
+\[\e[35;40m\]: 颜色，其中“F“为字体颜色，编号为30-37，“B”为背景颜色，编号为40-47
+\[\e[m\]：后面不设置
+source /root/.bashrc
+```
+
+- 导出虚拟机
+
+  - 选择模板（centos7）
+
+  - 开放式虚拟化格式1.0，导出位置，仅包含NAT网卡的MAC地址，写入Manifest地址
+  - 导出成ova格式
+
+- 导入虚拟机
+
+  - 选择系统和存储的安装路径
+  - 重命名虚拟机
+
+```sh
+timedatectl set-timezone Asia/Shanghai
+hostnamectl set-hostname [new-hostname] #vim /etc/hostname
+vim /etc/hosts
+	10.1.20.235  master
+	10.1.20.236  node1
+	10.1.20.237  node2
+reboot #重启虚拟机
+```
+
+
+
+
+
+
+
+## 网络
+
+### 网络基础
+
+IPv4的ip地址资源比较紧张，实际上整个互联网就是一个巨大的局域网，ip地址有限，那么通过划分子网，如何再在子网里面分配ip地址给子网的主机，这个时候同一一个ip就可以给一整个子网所共用，就解决了互联网ip不够的问题
+
+ip=网络号（网络部分+子网部分）+主机号
+
+子网掩码：区分哪段是网络，哪段是主机号
+
+A类保留给政府机构（0.0.0.0到127.255.255.255）
+B类分配给中等规模的公司（128.0.0.0到191.255.255.255）
+C类分配给任何需要的人（192.0.0.0到223.255.255.255）
+D类用于组播（224.0.0.0---239.255.255.255）
+E类用于实验（240.0.0.0---247.255.255.255）
+
+
+
+### 网络模式
+
+| 虚拟机        | 主机                       | 局域网   | 互联网                             |
+| ------------- | -------------------------- | -------- | ---------------------------------- |
+| 桥接模式      | 相互通讯                   | 相互通讯 | 可以上网，被访问需要暴漏在互联网上 |
+| NAT模式       | 可以访问主机，但不能被访问 | 不知道   | 可以上网，被访问需要暴漏在互联网上 |
+| Host-Only模式 | 相互通讯                   | 不知道   | 不可以上网                         |
+
+- 桥接模式：实现虚拟机在真实的网络上；
+- NAT模式：实现虚拟机隐藏在物理机之后，能上网，但不能访问物理机；
+- Host-Only模式：实现虚拟机隐藏在物理机之后，不能上网，但可以访问物理机；
+
+
+
+### 网卡
+
+```sh
+vim /etc/sysconfig/network-scripts/ifcfg-enp0s3
+#网卡基本信息
+	TYPE=Ethernet 							#以太网
+	PROXY_METHOD=none
+	BROWSER_ONLY=no
+	BOOTPROTO=dhcp 							#动态ip
+	DEFROUTE=yes
+	IPV4_FAILURE_FATAL=no
+	IPV6INIT=yes
+	IPV6_AUTOCONF=yes
+	IPV6_DEFROUTE=yes
+	IPV6_FAILURE_FATAL=no
+	IPV6_ADDR_GEN_MODE=stable-privacy
+	NAME=enp0s3                            #网卡名称
+	UUID=b351fca8-3596-4168-a35f-cc927c09e2c4
+	DEVICE=enp0s3
+	ONBOOT=yes                             #是否开机启动
+#将动态获取ip改为静态获取ip：BOOTPROTO=dhcp->static
+	BOOTPROTO=static
+	IPADDR=10.1.20.112
+	NETMASK=255.255.255.0
+	GATEWAY=10.1.20.1
+	DNS1=114.114.114.114
+	
+nmcli connection reload #重载网卡
+nmcli connection up ens33 #激活网卡ens33
+nmcli connection down ens33 #停用网卡ens33
+```
+
+
+
+
 
 
 
@@ -191,100 +374,6 @@ yum makecache #如提示AppStream下载失败，更新文件CentOS-AppStream.rep
 
 
 
-
-### 七、docker
-
-#### 3.docker安装
-
-##### 3.1 docker安装
-
-```sh
-yum install -y yum-utils device-mapper-persistent-data lvm2 wget
-wget -O /etc/yum.repos.d/docker-ce.repo https://download.docker.com/linux/centos/docker-ce.repo
-sed -i 's+download.docker.com+mirrors.tuna.tsinghua.edu.cn/docker-ce+' /etc/yum.repos.d/docker-ce.repo
-yum -y makecache fast
-yum -y install docker-ce-18.09.9
-```
-
-##### 3.2 docker启动
-
-```sh
-#启动停止虚拟机命令
-systemctl start docker
-systemctl enable docker
-systemctl stop docker
-
-#关闭防火墙
-service firewalld status #查看防火墙状态
-service firewalld stop #关闭防火墙
-```
-
-#### 4.docker容器
-
-##### 4.1.docker配置阿里镜像
-
-- 获取阿里云的容器配置
-
-  - 登录阿里云：https://cr.console.aliyun.com/cn-hangzhou/instances
-
-  - 获取阿里云在docker中配置文件：
-
-    ```json
-    {
-      "registry-mirrors": ["https://h45068lf.mirror.aliyuncs.com"]
-    }
-    ```
-
-- 在虚拟集中配置
-
-  - /etc/docker/daemon.json
-
-    ```json
-    {
-      "registry-mirrors": ["https://h45068lf.mirror.aliyuncs.com"]
-    }
-    ```
-
-    或者直接执行
-
-    ```sh
-    tee /etc/docker/daemon.json <<-'EOF'
-    {
-      "registry-mirrors": ["https://registry.docker-cn.com"]
-    }d
-    EOF
-    ```
-
-  - 重启docker
-
-    sudo systemctl daemon-reload
-    sudo systemctl restart docker
-
-##### 4.2 拉去镜像
-
-```sh
-docker search 关键字 #查询可以镜像 eg：docker search mysql
-docker pull 镜像名:tag   #拉取镜像 eg：docker pull mysql:5.7
-docker images  #查看所有本地镜像
-docker rmi id #删除指定的本地镜像
-```
-
-##### 4.3 启动容器
-
-```sh
-#创建容器
-docker run -d --name mytomcat -p 8888:8080 tomcat #新建并启动容器
-docker ps #查询容器
-docker rm  容器名或id #删除容器
-#启动容器
-docker start  容器名或id #开启容器
-docker ps -a #查询正在运行的容器
-docker stop  容器名或id #关闭容器
-docker restart  容器名或id #重启容器
-#修改容器配置
-docker exec -it 容器名或id bash #进入容器
-exit #退出
-```
 
 #### 5. centos测速
 
@@ -336,69 +425,26 @@ yum install java-1.8.0-openjdk* -y #yum安装方法会自动配置环境变量
 #默认安装位置 /usr/lib/jvm
 ```
 
-#### 2、zookeeper
 
-zookeeper官网：http://zookeeper.apache.org/
-
-##### 2.1 下载
 
 ```sh
-#安装
-#下载zookeeper-3.5.5：http://zookeeper.apache.org
-cd /usr/local/tmp
-tar -zxvf apache-zookeeper-3.5.5-bin.tar.gz
-mv apache-zookeeper-3.5.9-bin ../zookeeper
+#查询所有进程
+ps -a
+ps -aux
+ps -ef
+#根据条件查询进程
+ps -aux | grep "[条件]"
+ps -ef | grep "[条件]"
 
-#配置
-#创建数据保存目录
-cd ..
-mkdir data
-cd conf
-#创建配置文件zoo.cfg，zoo_sample.cfg仅是zookeeper的示例文件
-cp zoo_sample.cfg zoo.cfg
-#修改配置文件中数据保存目录
-vi zoo.cfg #dataDir=/usr/local/zookeeper/data
+#杀死进程
+kill -9 [pid] #通过信号的方式杀死进程
 
-#启动
-cd ../bin
-./zkServer.sh start  #启动
-./zkServer.sh status #查看状态，结果中standalone表示单机版
+#守护进程
+#kill杀死不了守护进程，会有其他信号不断重启守护进程，一般守护进程都带d，如mysqld
+
 ```
 
-##### 2.2 使用
 
-```sh
-#进入客户端
-./zkCli.sh
-#查看目录
-ls [-s][-R] /path #-s 详细信息,-R 当前目录和子目录中内容都罗列出来
-#创建目录
-create /path [data]
-#删除目录
-delete /path
-#查看数据
-get -s /path #-s详细信息
-#查看数据
-set /path data
-```
-
-##### 2.3 查看数据
-
-```sh
-[zk: localhost:2181(CONNECTED) 16] get -s /demo
-null            #存放的数据
-cZxid = 0x5
-ctime = Tue Jul 20 06:46:17 EDT 2021
-mZxid = 0x5
-mtime = Tue Jul 20 06:46:17 EDT 2021
-pZxid = 0x5          #子节点的zxid
-cversion = 0         #子节点更新次数
-dataVersion = 0      #节点数据更新次数
-aclVersion = 0       #节点ACL(授权信息)的更新次数
-ephemeralOwner = 0x0 #如果该节点为ephemeral节点(临时，生命周期与session一样), ephemeralOwner值表示与该节点绑定的session id. 如果该节点不是ephemeral节点, ephemeralOwner值为0.
-dataLength = 0       #节点数据字节数
-numChildren = 0      #子节点数量
-```
 
 
 

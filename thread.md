@@ -149,11 +149,6 @@ executorService.submit(()-{});
 
 
 
-run: Thread[hystrix-ext-1,5,main]
-getFallback: Thread[hystrix-ext-1,5,main]
-result:getFallback
-main: Thread[main,5,main]
-
 
 
 

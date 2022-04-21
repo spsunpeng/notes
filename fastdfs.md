@@ -1,8 +1,7 @@
 ## 使用
 
-目前在虚拟机上已搭建好环境，使用步骤
-
 ```sh
+#====================================一、fastdfs=======================================
 ###1.启动fastDFS+nginx
 service fdfs_trackerd start #启动trackerd，查询状态：service fdfs_trackerd status
 service fdfs_storaged start #启动storaged，查询状态：service fdfs_storaged status
@@ -14,6 +13,12 @@ service fdfs_storaged start #启动storaged，查询状态：service fdfs_storag
 ###3.测试
 #上传：使用postman上传图片
 #访问：使用浏览器访问图片地址
+
+
+#====================================二、aliyun oss====================================
+#1.登录
+#阿里云：支付宝登录
+#oss-browser: LTAI5tEyrogdgpib9dmhAgVY:f2TH0QwRV9et6jPYWQIJO1HDsDRYAH
 ```
 
 

@@ -1,3 +1,63 @@
+### 0、命令
+
+```sh
+#配置user.name和user.email
+git config --global user.name "sunpengHome"
+git config --global user.email "476567162@qq.com"
+#初始化
+git init
+#提交
+git add
+git commit
+#查看状态
+git status
+#查看提交记录
+git log
+git log --oneline
+git reflog
+#回退
+git reset --hard 版本的索引号/HEAD   #整体回退，reset（重置）
+git reset --mixed 版本的索引号/HEAD  #回退本地仓库和暂存区
+git reset --soft 版本的索引号/HEAD   #仅回退本地仓库
+#查看差异
+git  diff  无/版本索引/head  filename #比较暂存区的其它文件的目录，hard（重）
+git  diff  无  filename 				#比较的本地与暂存区
+
+#查看分支
+git branch
+#-a  查看所有远程
+#-v  查看本地分支
+#-vv 查看本地分支追踪的远程分支
+#增/删分支
+git checkout [branchName] #切换分支
+git branch (origin) [new-branchName] #新建分支，单独操作没用
+git branch -u origin [branchName] #追踪远程分支，单独操作没用
+git branch -d [branchName] #删除分支
+git branch -D [branchName] #强制删除分支
+#创建分支（创建、追踪、切换）
+git checkout -b {newdev} develop  #根据develop创建newdev分支，本地大改动时用
+git checkout -b release origin/release #根据origin/release创建release分支，没什么用
+git checkout -b origin/feature origin/develop #不由本地操作，而由远程操作。
+#所以，建议创建分支时要明确根据哪个分支创建
+#合并分支
+git merge [branchName]
+
+#==========================================tag================================================
+git tag #查
+git tag -a [new-tagname] -m ["commit"] #增
+git tag -d [tagname] #删
+git push origin [tagname] #推送到远程
+git push origin --tag #将本地tag全部推送到远程
+
+#=========================================remote================================================
+git remote -v #查看连接
+git remte set-url origin [URL] #修改url链接 
+git remote rm origin #删除url链接 
+git remote add origin [url] #添加url链接 
+```
+
+
+
 ### 1、授权
 
 ```sh
@@ -54,6 +114,15 @@ git clone git@github.com:spsunpeng/studyNotes.git
 - ssh协议克隆时就会校验，必须先配置公私钥。
 
   另外，此步如果要输入密码，则是因为在配置公私钥时设置了密码，建议不要设置密码。
+
+#### 2.3 本地远程连接
+
+```sh
+git remote -v #查看连接
+git remte set-url origin [URL] #修改url链接 
+git remote rm origin #删除url链接 
+git remote add origin [url] #添加url链接 
+```
 
 
 
@@ -116,9 +185,21 @@ git merge BranceName
 
 
 
-### 5、回退
+### 5、tag
 
-#### 5.1 git
+```sh
+git tag #查
+git tag -a [new-tagname] -m ["commit"] #增
+git tag -d [tagname] #删
+git push origin [tagname] #推送到远程
+git push origin --tag #将本地tag全部推送到远程
+```
+
+
+
+### 6、回退
+
+#### 6.1 git
 
 ```sh
 git reset --hard {版本的索引号/HEAD}   #整体回退
@@ -130,7 +211,7 @@ git push -f                          #远程仓库回退,强制推送
 
 HEAD指针：本地仓库每个分支上的代码的修改都会生成一个commit id信息，HEAD指针指向最近一次的commit提交，通过commit id可以进行版本回退。查看HEAD指针的改动日志为git reflog
 
-#### 5.2 idea
+#### 6.2 idea
 
 ![](git.assets/版本回退.png)
 
@@ -148,25 +229,25 @@ HEAD指针：本地仓库每个分支上的代码的修改都会生成一个comm
 
 
 
-### 6、冲突
+### 7、冲突
 
-#### 6.1 git
+#### 7.1 git
 
 ![](git.assets/冲突.png)
 
-#### 6.2 idea
+#### 7.2 idea
 
 ![](git.assets/回退merge.png)
 
 
 
-### 7、idea集成git
+### 8、idea集成git
 
 ![](git.assets/idea集成git.png)
 
 
 
-### 8、注意
+### 9、注意
 
 - 先commit再切换分支：一般在什么分支上commit则算这个分支的版本 ，而非在哪个分支上修改，不过很容易出错。
 - idea回退
@@ -174,52 +255,5 @@ HEAD指针：本地仓库每个分支上的代码的修改都会生成一个comm
   - 回退一个版本：不会产生冲突
   - 回退多个版本：由于中间版本的影响，产生的冲突需要merge
   - 回退几十个版本：新建分支或tag，然后再回退，解决冲突时直接选择“right”
-
-
-
-### 9、命令总结
-
-```sh
-#配置user.name和user.email
-git config --global user.name "sunpengHome"
-git config --global user.email "476567162@qq.com"
-#初始化
-git init
-#提交
-git add
-git commit
-#查看状态
-git status
-#查看提交记录
-git log
-git log --oneline
-git reflog
-#回退
-git reset --hard 版本的索引号/HEAD   #整体回退，reset（重置）
-git reset --mixed 版本的索引号/HEAD  #回退本地仓库和暂存区
-git reset --soft 版本的索引号/HEAD   #仅回退本地仓库
-#查看差异
-git  diff  无/版本索引/head  filename #比较暂存区的其它文件的目录，hard（重）
-git  diff  无  filename 				#比较的本地与暂存区
-
-#查看分支
-git branch
-#-a  查看所有远程
-#-v  查看本地分支
-#-vv 查看本地分支追踪的远程分支
-#增/删分支
-git checkout develop #切换分支
-git branch (origin) BranceName #新建分支，单独操作没用
-git branch -u origin BranceName #追踪远程分支，单独操作没用
-git branch -d develop #删除分支
-git branch -D develop #强制删除分支
-#创建分支（创建、追踪、切换）
-git checkout -b {newdev} develop  #根据develop创建newdev分支，本地大改动时用
-git checkout -b release origin/release #根据origin/release创建release分支，没什么用
-git checkout -b origin/feature origin/develop #不由本地操作，而由远程操作。
-#所以，建议创建分支时要明确根据哪个分支创建
-#合并分支
-git merge BranceName
-```
 
 

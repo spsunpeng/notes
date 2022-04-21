@@ -1,108 +1,121 @@
-## MySQl
+# 前言
 
-1、安装
+## 1、启动
 
-2、navicat
+```sh
+#===========================================一、启动虚拟机mysql===========================================
+#1.启动mysql-server
+systemctl start mysqld
+systemctl stop mysqld   #守护进程，kill杀不死
+#2.启动mysql-client
+mysql -uroot -proot
 
-3、sql
+#===========================================二、启动容器mysql===========================================
+systemctl start docker
+docker run -d --name mysql-3307 -p 3307:3306 -e MYSQL_ROOT_PASSWORD=root mysql:5.7
+```
 
-### 安装
+## 2、mysql
 
-### 启动
+```mysql
+-- 用户&权限
+#1.查询
+SELECT user,host FROM mysql.user; #查询所有用户
+SELECT * FROM mysql.user WHERE user='root'\G #查询具体用户
+#\g 相当于’;’
+#\G使每个字段打印到单独的行，也有’;'的作用
+#2.用户
+insert user 'userName'@'host'; #增
+drop user 'username'@'host';   #删
+#3.权限
+UPDATE mysql.user SET user.Host='%' where user.User='root'; # %表示任意主机，不然只有本地主机可以连接
+FLUSH PRIVILEGES;
 
-- window：我的电脑 --》管理 --》 服务和应用程序 --》 服务  --》 选中mysql，再点击启动
+-- 数据库
+show databases;
+create database [new-databaseName];
+drop database [databaseName];
+use databasesName; 
+
+-- 表
+create table tableName(属性名 类型 [约束] [备注]，==== ，====); #创建表和表的属性
+drop table tableName;
+show tables;
+alter table tableName1 rename tableName2;
+
+-- columns
+alter table [tableName] add column name varchar(10);#增
+alter table [tableName] drop column name; #删
+show columns from [tableName]; #查
+show create table [tableName]; #查
+
+-- 数据
+insert into tableName(,,) values(,,),(,,);
+insert into tableName set id=3,name="sunpeng";
+delete from tableName where id>2;
+select * from tableName;
+update tableName set name="sunyue" where id=1;
+
+-- 索引
+create INDEX [index_name] ON table_name (column1, column2, column3); #增
+alter table table_name add index [index_name] (column1, column2, column3); #增
+alter table table_name add unique (column1, column2, column3); #增
+alter table table_name drop index index_name; #删
+
+-- count
+select count(*) from [tableName]; #统计个数
+select count([columnName]) from [tableName]; #统计个数,columnName=null不计入统计
+select [columnName], count([columnName]) from [tableName] group by [columnName]; #按columnName分组并并统计
+
+-- as
+#别名：可以用于表名，也可以用于字段名，起完别名后就不允许用原名了
+select * from [tableName] as [other-tableName] where [other-tableName].id<5;
+
+-- in
+select * from student where age IN (select age from student where score>60) 在score>60
+select * from student where age IN(20,21,22) 
+```
+
+
+
+
+
+# 一、MySQl
+
+## 1、安装
+
+### 1.1 linux
+
+```sh
+#1.安装
+dnf install @mysql
+mysqld -v #查询版本号
+
+#2.启动mysql-server
+systemctl enable --now mysqld
+systemctl status mysqld
+
+#3.启动mysql-client
+/usr/bin/mysqladmin -u root password ['newPassword'] #初始root用户没有密码，可以修改密码
+mysql -u root -p
+	->mysql UPDATE mysql.user SET user.Host='%' where user.User='root'; #授予任意主机登录的权力
+```
+
+### 1.2 window
+
+- 启动
+
+  window：我的电脑 --》管理 --》 服务和应用程序 --》 服务  --》 选中mysql，再点击启动
 
   启动成功：
-
+  
   ![](db.assets/mysql启动.png)
 
 
 
-### 用户
-
-mysql -u root -p; 进入root用户
-
-增：insert user 'userName'@'host';
-
-删：drop user 'username'@'host';
-
- 
-
-### 数据库
-
-增：create database databasesName;
-
-删：drop database databasesName;
-
-查：show databases;
 
 
-
-### 表
-
-use databasesName; 进入表中
-
-增：create table tableName(属性名 类型 [约束] [备注]，==== ，====); 创建表和表的属性
-
-删：drop table tableName;
-
-查：show tables;
-
-改：alter table tableName1 rename tableName2;
-
- 
-
-### 表的字段(表列)
-
-增：alter table tableName add column name varchar(10);
-
-删：alter table tableName drop column name;
-
-查：show columns from tableName;
-
-​    show create table tableName;
-
-改：alter table tableName change ………
-
- 
-
-### 表的成员(表行)
-
-增：insert into tableName(,,) values(,,),(,,);
-
- insert into tableName set id=3,name="sunpeng";
-
-删：delete from tableName where id>2;
-
-查：select * from tableName;
-
-改：update tableName set name="sunyue" where id=1;
-
- 
-
-### 起别名
-
-直接起别名、as
-
-起别名的关键字：as  =   省略
-
-select * from tableName as t where t.id<5;
-
-注意：起完别名后就不允许用原名了。
-
-
-
-### in: 独立子查询
-
-- 在in()的基础上查询
-
-select * from student where age IN (select age from student where score>60) 在score>60的基础上查询全部，但我这个写的没有意义
-
-- in、not in 补充 =、!=
-
-select * from student where age IN(20,21,22) 查询age等于20，21，22的学生
-
-
+## 2、其他
 
 ### 多表查询
 
@@ -143,32 +156,6 @@ SELECT * FROM students cross join classes; 《=》 SELECT * FROM students, class
 设置缺省值。null也要设置，因为不设置，默认就真的是空白。
 
 
-
-### count
-
-```sql
-#查询总数目
-select count(*) from t_basedata_dictdata;
-#统计parent_bd_code不同的个数
-select count(distinct(parent_bd_code)) from t_basedata_dictdata; 
-#统计bd_type相同的个数
-select bd_type, count(*) from t_basedata_dictdata group by bd_type; 
-```
-
-
-
-### 索引
-
-```sql
-#添加普通索引
-create INDEX index_name ON table_name (column1, column2, column3) ;
-#添加普通索引
-alter table table_name add index index_name (column1, column2, column3) ;
-#添加唯一索引
-alter table table_name add unique (column1, column2, column3) ;
-#删除索引
-alter table table_name drop index index_name ;
-```
 
 
 
