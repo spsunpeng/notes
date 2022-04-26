@@ -84,7 +84,7 @@ grep  -参数  "字段"  filename
 
 5）分页分屏：k8s中的vi也支持分页/分屏操作
 
-6) 全局替换：:%s/from/to/g
+6) 全局替换：:%s/[from]/[to]/g
 
 
 
@@ -134,11 +134,20 @@ systemctl is-enabled [app] # 查看开机是否启动
 systemctl disable [app] # 关闭开机启用
 systemctl enable [app] # 开机启用
 
-
 #网络配置
 cd /etc/sysconfig/network-scripts #网络配置文件位置
 vim ifcfg-ens33 #网络配置文件
 nmcli c reload #重启网卡
+
+#=============================================远程==========================================
+#远程复制：和cp的主要区别就是要指定路径
+scp [file] [ip]:[path/[new-file]] 
+scp t1.txt 10.1.20.237:/etc/yum.repos.d/ #复制到/etc/yum.repos.d目录下
+scp t1.txt 10.1.20.237:. #复制到家目录下
+#远程登录
+ssh [user]@[ip]
+ssh root@10.1.20.237
+ps -ef | grep ssh #是否启动
 ```
 
 #### 2、window基本命令

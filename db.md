@@ -32,7 +32,7 @@ UPDATE mysql.user SET user.Host='%' where user.User='root'; # %表示任意主�
 FLUSH PRIVILEGES;
 
 -- 数据库
-show databases;
+show databases; #查
 create database [new-databaseName];
 drop database [databaseName];
 use databasesName; 
@@ -40,14 +40,15 @@ use databasesName;
 -- 表
 create table tableName(属性名 类型 [约束] [备注]，==== ，====); #创建表和表的属性
 drop table tableName;
-show tables;
 alter table tableName1 rename tableName2;
+show tables;
+show create table [tableName]; #查
 
 -- columns
 alter table [tableName] add column name varchar(10);#增
 alter table [tableName] drop column name; #删
 show columns from [tableName]; #查
-show create table [tableName]; #查
+
 
 -- 数据
 insert into tableName(,,) values(,,),(,,);

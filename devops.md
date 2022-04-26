@@ -6,7 +6,7 @@
 #========================================版本=================================================
 docker -version #19.03.12
 docker-compose -version #1.29.2
-kubectl version #1.14.1
+kubectl version #1.17.17
 
 #=========================================启动==============================================
 #docker
@@ -18,7 +18,6 @@ systemctl start kubelet
 #nfs：共享数据
 systemctl start nfs.service #master
 systemctl start rpcbind.service #master
-mount 10.1.20.235:/usr/local/data/www-data /mnt #node
 #rinetd：端口转发
 netstat -tulpn | grep rinetd #查看映射，具体产看看三.2
 ```
@@ -145,7 +144,7 @@ wget -O /etc/yum.repos.d/docker-ce.repo https://download.docker.com/linux/centos
 sed -i 's+download.docker.com+mirrors.tuna.tsinghua.edu.cn/docker-ce+' /etc/yum.repos.d/docker-ce.repo
 yum -y makecache fast
 yum -y install docker-ce-18.09.9
-docker -version
+docker -v
 
 # 配置阿里镜像
 vim /etc/docker/daemon.json
@@ -207,7 +206,6 @@ docker inspect [id|name] #查询容器详情，比如 port, ip
 #进入容器
 docker exec -it [docker-id|docker-name] /bin/bash #进入容器。-it:以交互的模式进入
 #tomcat404原因可能版本问题，需要将webapps.dist下的内容全部复制到webapps中
-
 
 
 #==========================================三、网络===============================================
@@ -323,19 +321,28 @@ docker-compose down #下线
 
 名词
 
-- pod pause 数据卷
-- container 容器
-- label 标签
-- replication controller 复制控制器
-- service 服务
-- node 节点
+**Master**：集群控制节点，每个集群需要至少一个master节点负责集群的管控
+
+**Node**：工作负载节点，由master分配容器到这些node工作节点上，然后node节点上的docker负责容器的运行
+
+**Pod**：kubernetes的最小控制单元，容器都是运行在pod中的，一个pod中可以有1个或者多个容器
+
+**Controller**：控制器，通过它来实现对pod的管理，比如启动pod、停止pod、伸缩pod的数量等等
+
+**Service**：pod对外服务的统一入口，下面可以维护者同一类的多个pod
+
+**Label**：标签，用于对pod进行分类，同一类pod会拥有相同的标签
+
+**NameSpace**：命名空间，用来隔离pod的运行环境
+
+
 
 ## 1、安装
 
 ```sh
 #=============================================1.准备===================================================
 #1.1关闭交换区
-swapoff -a #查看交换分区
+swapoff -a #关闭交换分区
 vi /etc/fstab 
    #swap 注释
 #1.2 配置网桥
@@ -346,21 +353,25 @@ EOF
 sysctl --system #查看
 
 #====================================2.安装 kubelet kubeadm kubectl======================================
-#kubeadm：容器集群部署工具，kubectl：命令
-yum install -y kubelet-1.14.1 kubeadm-1.14.1 kubectl-1.14.1 
+vim /etc/yum.repos.d #k8s的yum源
+#------------
+[kubernetes]
+name=Kubernetes
+baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
+enabled=1
+gpgcheck=0
+#------------
+yum install -y kubelet-1.17.17 kubeadm-1.17.17 kubectl-1.17.17  #kubeadm：容器集群部署工具，kubectl：命令
 rpm -qa | grep kube #查看
 systemctl start kubelet
 systemctl enable kubelet
 
-#====================================3.docker拉去k8s镜像=================================================
-coredns-1-3-1.tar  kube-apiserver-1-15.tar   kube-proxy-1-15.tar      myflannel-11-0.tar
-etcd-3-3-10.tar    kube-controller-1-15.tar  kube-scheduler-1-15.tar  pause-3-1.tar
 
-
-#====================================4.构建集群：master==================================================
+#====================================3.构建集群：master==================================================
 #构建集群
-kubeadm init --kubernetes-version=v1.14.1 --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=NumCPU
-#--ignore-preflight-errors=NumCPU：忽略内存限制，不报错可以不加
+kubeadm init --kubernetes-version=v1.17.17 --pod-network-cidr=10.244.0.0/16
+##如果内存报错：--ignore-preflight-errors=NumCPU
+##过程：1.自动下载k8s需要的镜像并启动（docker镜像源需要配置好）；2.创建集群
 #执行kubeadm init打印出的命令
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
@@ -374,15 +385,16 @@ kubectl get pod --all-namespaces #查看
 kubectl apply -f kubernetes-dashboard.yaml
 kubectl apply -f admin-role.yaml
 kubectl apply -f kubernetes-dashboard-admin.rbac.yaml
-kubectl -n kube-system get svc #查看
+kubectl get svc -n kube-system #查看
 #访问http://192.168.163.132:32000 
 
-#===========================================5.加入集群：node=============================================
+#===========================================4.加入集群：node=============================================
 #执行master节点构建集权式的输出
 kubeadm join 10.1.20.235:6443 --token f5jryy.c9uut9rxhokzlj9o \
     --discovery-token-ca-cert-hash sha256:ed4005bc79fd7be8d7d53eb06fd00e1833d79b127d8e06bfaa080ef1a148282e 
 #如果忘记，在master上执行查看，再在node中加入
-kubeadm token list #master执行：查看
+kubeadm token list #master执行：查看token
+kubeadm token create #master执行：如果没有或失效了创建token
 kubeadm join 192.168.163.132:6443 --token aoeout.9k0ybvrfy09q1jf6 --discovery-token-unsafe-skip-ca-verification #node执行：无token方式加入集群
 
 ```
@@ -392,6 +404,32 @@ kubeadm join 192.168.163.132:6443 --token aoeout.9k0ybvrfy09q1jf6 --discovery-to
 ## 2、kubectl
 
 ```sh
+node
+namesapce ns
+deploy
+pod
+service
+persistentVolume pv
+persistentVolumeClaim pvc
+configmap cm
+secret
+
+create (-f)
+apply 
+get (-o wide)
+describe 
+delete
+top 
+
+
+#=============================================top 资源============================================
+kubectl top node 
+kubectl top pod
+
+#=============================================secret==============================================
+kubectl get secret -n kube-system | grep token
+kubectl describe secret [secret-name] -n kube-system
+
 #=============================================namespace==============================================
 kubectl get ns
 
@@ -433,18 +471,14 @@ systemctl start rpcbind.service
 systemctl enable nfs.service
 systemctl enable rpcbind.service
 exportfs #验证
-
 #node安装
-yum install nfs-utils
+yum install nfs-utils -y
+#node验证：node可以像本地一样访问远程，实际访问中还是要用网络
 showmount -e 10.1.20.235 #查询
-#并未拉去，只是像本地一样访问远程，实际访问中还是要用网络
-mount 10.1.20.235:/usr/local/data/www-data /mnt #关机需要重新执行
-#测试：查看/mnt下文件
+mount 10.1.20.235:/usr/local/data/www-data /mnt #映射
+#查看/mnt下是否有master映射的文件
 
-#启动/重启
-systemctl start nfs.service #master
-systemctl start rpcbind.service #master
-mount 10.1.20.235:/usr/local/data/www-data /mnt #node
+
 
 #结合k8s
 kubectl create -f [yml]
@@ -474,7 +508,7 @@ kubectl create -f [yml]
 #http://[ip]:[serivice-port]/test/index.jsp 
 ```
 
-## 3、deploy
+## 3、deploy-部署
 
 ```yaml
 #基本
@@ -494,60 +528,392 @@ spec:
         image: tomcat
         ports:
         - containerPort: 8080
-
-#基本信息 元数据 容器 共享数据 内存限制
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: tomcat-deploy
-spec: 
-  replicas: 2
-  template:
-    metadata:
-      labels:
-        app: tomcat-cluster-pod
-    spec: 
-      volumes:
-      - name: web-app
-        hostPath:
-          path: /mnt
-      containers:
-      - name: tomcat-cluster-container
-        image: tomcat
-        resources:
-          requests:
-            cpu: 0.5
-            memory: 200Mi
-          limits:
-            cpu: 1
-            memory: 512Mi
-        ports:
-        - containerPort: 8080
-        volumeMounts:
-        - name: web-app
-          mountPath: /usr/local/tomcat/webapps
 ```
 
-## 4、service
+## 4、service-网络
+
+### 4.1 service
+
+在kubernetes中，pod是应用程序的载体，我们可以通过pod的ip来访问应用程序，但是pod的ip地址不是固定的，这也就意味着不方便直接采用pod的ip对服务进行访问。
+
+为了解决这个问题，kubernetes提供了Service资源，Service会对提供同一个服务的多个pod进行聚合，并且提供一个统一的入口地址。通过访问Service的入口地址就能访问到后面的pod服务。
+
+![img](devops.assets/image-20200408194716912-1626783758946.png)
+
+Service在很多情况下只是一个概念，真正起作用的其实是kube-proxy服务进程，每个Node节点上都运行着一个kube-proxy服务进程。当创建Service的时候会通过api-server向etcd写入创建的service的信息，而kube-proxy会基于监听的机制发现这种Service的变动，然后**它会将最新的Service信息转换成对应的访问规则**。
+
+![img](devops.assets/image-20200509121254425.png)
+
+```
+# 10.97.97.97:80 是service提供的访问入口
+# 当访问这个入口的时候，可以发现后面有三个pod的服务在等待调用，
+# kube-proxy会基于rr（轮询）的策略，将请求分发到其中一个pod上去
+# 这个规则会同时在集群内的所有节点上都生成，所以在任何一个节点上访问都可以。
+[root@node1 ~]# ipvsadm -Ln
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -> RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  10.97.97.97:80 rr
+  -> 10.244.1.39:80               Masq    1      0          0
+  -> 10.244.1.40:80               Masq    1      0          0
+  -> 10.244.2.33:80               Masq    1      0          0
+```
+
+kube-proxy目前支持三种工作模式:
+
+- userspace 
+- iptables 
+- ipvs 
+
+### 4.2 service类型
+
+- service的资源清单文件
+
+```yaml
+kind: Service  # 资源类型
+apiVersion: v1  # 资源版本
+metadata: # 元数据
+  name: service # 资源名称
+spec: # 描述
+  selector: # 标签选择器，用于确定当前service代理哪些pod
+    app: nginx
+  clusterIP:  # 虚拟服务的ip地址，不指定就会随机分配
+  type: ClusterIP #service的访问方式：ClusterIP（默认） NodePort LoadBalancer ExternalName
+  ports: # 端口信息
+    - protocol: TCP 
+      port: 3017  # service端口
+      targetPort: 5003 # pod端口
+      nodePort: 31122 # 宿主机端口，不指定就会随机分配
+```
+
+- ClusterIP：默认值，它是Kubernetes系统自动分配的虚拟IP，只能在集群内部访问
+- NodePort：将Service通过指定的Node上的端口暴露给外部，通过此方法，就可以在集群外部访问服务
+- LoadBalancer：使用外接负载均衡器完成到服务的负载分发，注意此模式需要外部云环境支持
+- ExternalName： 把集群外部的服务引入集群内部，直接使用
+
+## 5、volume-数据存储
+
+### 5.1 基本存储
+
+#### 5.1.1 EmptyDir
+
+EmptyDir是最基础的Volume类型，一个EmptyDir就是Host上的一个空目录。
+
+EmptyDir是在Pod被分配到Node时创建的，它的初始内容为空，并且无须指定宿主机上对应的目录文件，因为kubernetes会自动分配一个目录，当Pod销毁时， EmptyDir中的数据也会被永久删除。 EmptyDir用途如下：
+
+- 临时空间，例如用于某些应用程序运行时所需的临时目录，且无须永久保留
+- 一个容器需要从另一个容器中获取数据的目录（多容器共享目录）
+
+接下来，通过一个容器之间文件共享的案例来使用一下EmptyDir。
+
+在一个Pod中准备两个容器nginx和busybox，然后声明一个Volume分别挂在到两个容器的目录中，然后nginx容器负责向Volume中写日志，busybox中通过命令将日志内容读到控制台。
+
+![img](devops.assets/image-20200413174713773.png)
+
+创建一个volume-emptydir.yaml
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: volume-emptydir
+  namespace: dev
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.17.1
+    ports:
+    - containerPort: 80
+    volumeMounts:  # 将logs-volume挂在到nginx容器中，对应的目录为 /var/log/nginx
+    - name: logs-volume
+      mountPath: /var/log/nginx
+  - name: busybox
+    image: busybox:1.30
+    command: ["/bin/sh","-c","tail -f /logs/access.log"] # 初始命令，动态读取指定文件中内容
+    volumeMounts:  # 将logs-volume 挂在到busybox容器中，对应的目录为 /logs
+    - name: logs-volume
+      mountPath: /logs
+  volumes: # 声明volume， name为logs-volume，类型为emptyDir
+  - name: logs-volume
+    emptyDir: {}
+```
+
+#### 5.1.2 HostPath
+
+上节课提到，EmptyDir中数据不会被持久化，它会随着Pod的结束而销毁，如果想简单的将数据持久化到主机中，可以选择HostPath。
+
+HostPath就是将Node主机中一个实际目录挂在到Pod中，以供容器使用，这样的设计就可以保证Pod销毁了，但是数据依据可以存在于Node主机上。
+
+![img](devops.assets/image-20200413214031331.png)
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: volume-hostpath
+  namespace: dev
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.17.1
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: logs-volume
+      mountPath: /var/log/nginx
+  - name: busybox
+    image: busybox:1.30
+    command: ["/bin/sh","-c","tail -f /logs/access.log"]
+    volumeMounts:
+    - name: logs-volume
+      mountPath: /logs
+  volumes:
+  - name: logs-volume
+    hostPath: 
+      path: /root/logs
+      
+```
+
+#### 5.1.3 nfs
+
+HostPath可以解决数据持久化的问题，但是一旦Node节点故障了，Pod如果转移到了别的节点，又会出现问题了，此时需要准备单独的网络存储系统，比较常用的用NFS、CIFS。
+
+NFS是一个网络文件存储系统，可以搭建一台NFS服务器，然后将Pod中的存储直接连接到NFS系统上，这样的话，无论Pod在节点上怎么转移，只要Node跟NFS的对接没问题，数据就可以成功访问。
+
+![img](devops.assets/image-20200413215133559-1650938670335.png)
+
+- 安装
+
+```sh
+#=============================================nfs 安装==============================================
+#master安装
+yum install -y nfs-utils rpcbind
+mkdir data
+cd data
+mkdir www-data
+vim /etc/exports
+	/usr/local/data/www-data 10.1.20.235/24(rw,sync)
+systemctl start nfs.service
+systemctl start rpcbind.service
+systemctl enable nfs.service
+systemctl enable rpcbind.service
+exportfs #验证
+#node安装
+yum install nfs-utils -y
+#node验证：node可以像本地一样访问远程，实际访问中还是要用网络
+showmount -e 10.1.20.235 #查询
+mount 10.1.20.235:/usr/local/data/www-data /mnt #映射
+#查看/mnt下是否有master映射的文件
+```
+
+- 部署
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: volume-nfs
+  namespace: dev
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.17.1
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: logs-volume
+      mountPath: /var/log/nginx
+  - name: busybox
+    image: busybox:1.30
+    command: ["/bin/sh","-c","tail -f /logs/access.log"] 
+    volumeMounts:
+    - name: logs-volume
+      mountPath: /logs
+  volumes:
+  - name: logs-volume
+    nfs:
+      server: 10.1.20.253  #nfs服务器地址
+      path: /data/sunpeng/themes #共享文件路径
+```
+
+
+
+### 5.2 k8s存储
+
+- 前面已经学习了使用NFS提供存储，此时就要求用户会搭建NFS系统，并且会在yaml配置nfs。由于kubernetes支持的存储系统有很多，要求客户全都掌握，显然不现实。为了能够屏蔽底层存储实现的细节，方便用户使用， kubernetes引入PV和PVC两种资源对象。
+
+  - PV（Persistent Volume）是持久化卷的意思，是对底层的共享存储的一种抽象。一般情况下PV由kubernetes管理员进行创建和配置，它与底层具体的共享存储技术有关，并通过插件完成与共享存储的对接。
+
+  - PVC（Persistent Volume Claim）是持久卷声明的意思，是用户对于存储需求的一种声明。换句话说，PVC其实就是用户向kubernetes系统发出的一种资源需求申请。
+
+  ![img](devops.assets/image-20200514194111567.png)
+
+  使用了PV和PVC之后，工作可以得到进一步的细分：
+
+  - 存储：存储工程师维护
+  - PV： kubernetes管理员维护
+  - PVC：kubernetes用户维护
+
+#### 5.2.1 pv
 
 ```yml
 apiVersion: v1
-kind: Service
+kind: PersistentVolume
 metadata:
-  name: tomcat-service
-  labels:
-    app: tomcat-service   
+  name:  themes
 spec:
-  type: NodePort
-  selector:
-    app: tomcat-cluster-pod
-  ports:
-  - port: 8000
-    targetPort: 8080
-    nodePort: 32500
+  capacity:
+    storage: 3Gi
+  accessModes:
+  - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    path: /data/sunpeng/themes
+    server: 10.1.20.253
 ```
 
+PV 的关键配置参数说明：
 
+- **存储类型**
+
+  底层实际存储的类型，kubernetes支持多种存储类型，每种存储类型的配置都有所差异
+
+- **存储能力（capacity）**
+
+目前只支持存储空间的设置( storage=1Gi )，不过未来可能会加入IOPS、吞吐量等指标的配置
+
+- **访问模式（accessModes）**
+
+  用于描述用户应用对存储资源的访问权限，访问权限包括下面几种方式：
+
+  - ReadWriteOnce（RWO）：读写权限，但是只能被单个节点挂载
+  - ReadOnlyMany（ROX）： 只读权限，可以被多个节点挂载
+  - ReadWriteMany（RWX）：读写权限，可以被多个节点挂载
+
+  `需要注意的是，底层不同的存储类型可能支持的访问模式不同`
+
+- **回收策略（persistentVolumeReclaimPolicy）**
+
+  当PV不再被使用了之后，对其的处理方式。目前支持三种策略：
+
+  - Retain （保留） 保留数据，需要管理员手工清理数据
+  - Recycle（回收） 清除 PV 中的数据，效果相当于执行 rm -rf /thevolume/*
+  - Delete （删除） 与 PV 相连的后端存储完成 volume 的删除操作，当然这常见于云服务商的存储服务
+
+  `需要注意的是，底层不同的存储类型可能支持的回收策略不同`
+
+- **存储类别**
+
+  PV可以通过storageClassName参数指定一个存储类别
+
+  - 具有特定类别的PV只能与请求了该类别的PVC进行绑定
+  - 未设定类别的PV则只能与不请求任何类别的PVC进行绑定
+
+- **状态（status）**
+
+  一个 PV 的生命周期中，可能会处于4中不同的阶段：
+
+  - Available（可用）： 表示可用状态，还未被任何 PVC 绑定
+  - Bound（已绑定）： 表示 PV 已经被 PVC 绑定
+  - Released（已释放）： 表示 PVC 被删除，但是资源还未被集群重新声明
+  - Failed（失败）： 表示该 PV 的自动回收失败
+
+#### 5.2.1 pvc
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: themes
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+```
+
+PVC 的关键配置参数说明：
+
+- **访问模式（accessModes）**
+
+用于描述用户应用对存储资源的访问权限
+
+- **选择条件（selector）**
+
+  通过Label Selector的设置，可使PVC对于系统中己存在的PV进行筛选
+
+- **存储类别（storageClassName）**
+
+  PVC在定义时可以设定需要的后端存储的类别，只有设置了该class的pv才能被系统选出
+
+- **资源请求（Resources ）**
+
+  描述对存储资源的请求
+
+#### 5.2.3 生命周期
+
+PVC和PV是一一对应的，PV和PVC之间的相互作用遵循以下生命周期：
+
+- **资源供应**：管理员手动创建底层存储和PV
+
+- **资源绑定**：用户创建PVC，kubernetes负责根据PVC的声明去寻找PV，并绑定
+
+  在用户定义好PVC之后，系统将根据PVC对存储资源的请求在已存在的PV中选择一个满足条件的
+
+  - 一旦找到，就将该PV与用户定义的PVC进行绑定，用户的应用就可以使用这个PVC了
+  - 如果找不到，PVC则会无限期处于Pending状态，直到等到系统管理员创建了一个符合其要求的PV
+
+  PV一旦绑定到某个PVC上，就会被这个PVC独占，不能再与其他PVC进行绑定了
+
+- **资源使用**：用户可在pod中像volume一样使用pvc
+
+  Pod使用Volume的定义，将PVC挂载到容器内的某个路径进行使用。
+
+- **资源释放**：用户删除pvc来释放pv
+
+  当存储资源使用完毕后，用户可以删除PVC，与该PVC绑定的PV将会被标记为“已释放”，但还不能立刻与其他PVC进行绑定。通过之前PVC写入的数据可能还被留在存储设备上，只有在清除之后该PV才能再次使用。
+
+- **资源回收**：kubernetes根据pv设置的回收策略进行资源的回收
+
+  对于PV，管理员可以设定回收策略，用于设置与之绑定的PVC释放资源之后如何处理遗留数据的问题。只有PV的存储空间完成回收，才能供新的PVC绑定和使用
+
+![img](devops.assets/image-20200515002806726.png)
+
+#### 
+
+### 5.3 配置存储
+
+- configmap：一般存储一些配置信息
+- secret：一般存储加密的信息，比如账号密码
+
+#### 5.3.1 configmap
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap
+  namespace: dev
+data:
+  info: |
+    username:admin
+    password:123456
+```
+
+#### 5.3.2 secret
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret
+  namespace: dev
+type: Opaque
+data:
+  username: YWRtaW4=
+  password: MTIzNDU2
+```
 
 
 
@@ -559,9 +925,31 @@ spec:
 
 # 五、devops
 
+redirect_urls
+
+https://bplusdev.sinosun.com:18580/auth/realms/master/protocol/openid-connect/3p-cookies/step1.html?version=iqfmg
+
+http://10.1.20.220:31121/realms/master/protocol/openid-connect/auth?client_id=security-admin-console&redirect_uri=http://10.1.20.220:31121/admin/master/console/&state=7b766a4d-c4e1-4664-9159-81eb520ae6b7&response_mode=fragment&response_type=code&scope=openid&nonce=0b30b0a1-44b4-43e7-a3b3-682abf0cdc0d&code_challenge=Dos_BbmUuyrrFZOYcp2BdRq_FnA00GeAIl-1Cm7j4Gg&code_challenge_method=S256
 
 
 
+ 
+
+https://bplussit.sinosun.com:18680/auth/realms/bplussit/protocol/openid-connect/auth?client_id=security-admin-console&redirect_uri=https%3A%2F%2Fbplussit.sinosun.com%3A18680%2Fauth%2Fadmin%2Fbplussit%2Fconsole%2F%23%2Frealms%2Fbplussit&state=614a4d41-397b-4e76-8730-bdd1e098816f&response_mode=fragment&response_type=code&scope=openid&nonce=bdde0a7d-647d-4c37-b94c-8cfd1d38a014&code_challenge=Mfg0XGjbfXIba88saPuCyik8H7itoWkQSBeenmFNO8g&code_challenge_method=S256
+
+
+
+jenkins
+
+springboot源码
+
+nigx web
+
+springcloud-alibaba
+
+jvm 多线程
+
+算法
 
 
 
