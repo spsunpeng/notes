@@ -188,7 +188,8 @@ eureka.instance.metadata-map.dalao=malaoshihahaha
 ```java
 //通过EurekaClient获取服务列表，并选出自己需要的几点
 @Autowired
-EurekaClient eurekaClient;   
+private EurekaClient eurekaClient; 
+
 @GetMapping("/client1")
 public void client2(){
     final List<InstanceInfo> providers = eurekaClient.getInstancesByVipAddress("provider", false);
@@ -202,7 +203,8 @@ public void client2(){
 
 //通过负载均衡客户端选出LoadBalancerClient
 @Autowired
-LoadBalancerClient lb;
+private LoadBalancerClient lb;
+
 @GetMapping("/client2")
 public Object client2(){
     final ServiceInstance provider = lb.choose("provider");
@@ -216,6 +218,7 @@ public Object client2(){
 //配置RestTemplate，简化操作
 @Autowired
 private RestTemplate restTemplate; //restTemplate没有默认支持ribbon，RestTemplate需要配置
+
 @GetMapping("/client3")
 public String client3(){
     return restTemplate.getForObject("http://provider/hello";, String.class);
@@ -337,7 +340,7 @@ public class FeignAuthConfiguration {
 	}
 }
 
-在feign上加配置
+//在feign上加配置
 @FeignClient(name = "service-valuation",configuration = FeignAuthConfiguration.class)
 ```
 
@@ -586,11 +589,13 @@ management.endpoint.health.enabled=true
 management.endpoint.routes.enabled=true
 
 #通过服务名配置（虚拟主机名）
-zuul.routes.provider=/xxoo/**
+zuul.routes.user-provider=/user-provider/**
+#测试：127.0.0.1:80/user-provider/getByName ==》 127.0.0.1:3011/getByName
 
-#自定义请求映射url
-zuul.routes.xx.path=/xx/**
-zuul.routes.xx.url=http://mashibing.com
+#自定义请求映射url，用于映射注册中心外部
+zuul.routes.msb.path=/msb/**
+zuul.routes.msb.url=http://mashibing.com
+#测试：127.0.0.1:80/msb => http://mashibing.com
 
 #前缀
 #zuul.prefix=/api/v1

@@ -505,7 +505,8 @@ kill -9 [pid] #删除
 
 #测试
 kubectl create -f [yml]
-#http://[ip]:[serivice-port]/test/index.jsp 
+#http://[ip]:[serivice-port]/test/index.jsp
+
 ```
 
 ## 3、deploy-部署
@@ -525,9 +526,38 @@ spec:
     spec:
       containers:
       - name: tomcat-cluster-container
-        image: tomcat
+        image: tomcat:latest
         ports:
         - containerPort: 8080
+        resources:
+      	  requests: #资源需求（最小限制）：pod启动起来的最低需求
+            cpu: "500m"
+        	memory: "512Mi"
+      	  limits:  #资源限额（最大限制）：即运行Pod期间，可能内存使用量会增加，那最多能使用多少内存，这就是资源限额
+            cpu: "1000m"
+            memory: "1024Mi"
+```
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-cpu-limits
+  labels:
+    app: test
+    tier: frontend
+spec:
+  containers:
+  - name: myapp
+    image: ikubernetes/stress-ng
+    command: ["/usr/bin/stress-ng","-c 1","--metrics-brief"]
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
 ```
 
 ## 4、service-网络
@@ -955,9 +985,21 @@ jvm 多线程
 
 
 
+# 六、公司k8s
 
+1、容器
 
+![image-20220617142835193](devops.assets/image-20220617142835193.png)
 
+- bin: jvm启动脚本
+
+- conf: 配置文件
+  - 环境变量：存储方式configMap
+  - endpoint.yaml
+
+- lib: jar包，服务打成的jar包
+
+- log: 日志：存储方式hostPath
 
 
 

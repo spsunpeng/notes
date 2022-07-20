@@ -177,31 +177,7 @@ String strList = objectMapper.writeValueAsString(arrayList);
 
 List<Student> students = objectMapper.readValue(listJsonStr, new TypeReference<List<Student>>()
 
-#### 6、加密
 
-##### 6.1 加密
-
-base64：编解码，不是加密，所以可以反解码
-
-散列算法：md5【不可反解码，但由于对于主题的加密结果一样，可以通过彩虹表（对应表）破解】
-
-对称加密：两方持有相同的密钥，加解密只需要密钥即可
-
-非对称加密：公加私解，私加公解
-
-##### 6.2、非堆成加密
-
-**非堆成加密**：生成私钥和公钥，传输时消息和公钥可能会被截取。
-
-| 加密/签名    | 解密/验签    | 泄露                         | 篡改                             |
-| ------------ | ------------ | ---------------------------- | -------------------------------- |
-| **公钥加密** | **私钥解密** | 防泄露，因为只有私钥才能解密 | 能篡改，因为公钥就可以为信息加密 |
-| **私钥签名** | **公钥验签** | 会泄露，因为公钥就可以验签   | 防篡改，因为只有私钥才能签名     |
-
-- 如果既要防泄露又要防篡改，需要双方都生成公私钥，消息在通信时既要加密又要签名。
-- 非堆成加密：RSA加密算法
-
-参考：https://www.cnblogs.com/pcheng/p/9629621.html
 
 
 
@@ -413,17 +389,20 @@ stringbuilder 速度快
 ```java
 Parent parent = new Parent();
 Son son = new Son();
-// 子类继承父类，子类包含的信息比父类多，
-// 所以子类可以全全接受父类的信息
-// 而父类如果要接受子类的信息，那么子类独有的字段就不能接受，父类实例无法无法指向子类示例
-Son = parent; //正确
-parent = son; // 编译错误，对象无法转换
-parent = (Parent)son; // 运行错误，对象无法转换
 
-Parent parent = new Son(); 
-parent = (Parent)son; //只有这样才是正确的，多态的用法。具体原理可以查看C++笔记
+// 子类继承父类，子类包含的信息比父类多。
+// 父类可以指向子类，子类不能指向父类，这样使用基类方法一定不会出错
+// 强制转换只有在地址本身就是此类型，不关心指针的类型
 
-//实例
+parent = son; //正确：子类可以指向父类
+son = parent; //编译错误：语法错误
+son = (Son)parent; // 运行错误：ClassCastException
+
+Parent falseParent = new Son(); 
+son = (Son)falseParent; //正确的：多态的用法，falseParent本质是Son，所以可以强制转换。
+son = (Son)(new Son()) //等价于
+
+//示例
 public GetTownResponse getTown(String districtCode) {
     return (GetTownResponse)this.getChildRegion(districtCode, new GetTownResponse());
 }
@@ -551,31 +530,20 @@ pm.environment.set("vop_open_token", "Bearer "+jsonData.result.accessToken);
 
 
 
+# 2022-06
+
+### 1、notepad++
+
+换行符是 /r/n
 
 
-vmware 15.5 
 
-xshell
+### 2、杀死win8080端口的进程
 
-centos7x64 1810
-
-{
-  "content": "各企业中会员列表",
-  "grade": 4,
-  "pid": -1,
-  "roleId": 1,
-  "state": 1,
-  "url": "/v3/member/admin/member/inCompanyList"
-}
-
-{
-  "content": "会员详情列表",
-  "grade": 4,
-  "pid": -1,
-  "roleId": 1,
-  "state": 1,
-  "url": "/v3/member/admin/member/detailList"
-}
+```sh
+netstat -ano | findstr 8080 
+taskkill /F /PID [pid]
+```
 
 
 
@@ -583,22 +551,25 @@ centos7x64 1810
 
 
 
-zsa-adapter、presign 迁移至bizcloud，sdk变更，依赖他俩的服务总结如下，未总结到的麻烦服务负责人告知我
+# 2022-07
 
-|             | media                    | ledgermate |
-| ----------- | ------------------------ | ---------- |
-| zsa-adapter | notice、customer-profile | 无         |
-| presign     | category                 | 无         |
+### 1、查看谷歌保存的密码
 
+![image-20220707172336218](quickNotes.assets/image-20220707172336218.png)
 
 
 
+搜索框搜索的是网站和用户名
 
 
 
+### 2、web刷新
 
+刷新：F5
 
+强制刷新：ctrl+F5
 
+F5可能得到的是浏览器缓存的数据，如果是浏览器缓存则会返回304，ctrl+F5强制刷新才可以保证一定是一次重新的请求
 
 
 

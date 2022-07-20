@@ -273,7 +273,7 @@ public class RestTypeController {
 <mvc:resources mapping="/static/**" location="/static/"></mvc:resources>
 ```
 
-#### 6、attribute
+#### 6、HandlerInterceptor
 
 ##### 6.1 代码
 

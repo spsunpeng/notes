@@ -45,8 +45,8 @@ show tables;
 show create table [tableName]; #查
 
 -- columns
-alter table [tableName] add column name varchar(10);#增
-alter table [tableName] drop column name; #删
+alter table [tableName] add column [columnName] varchar(10) comment ['注释'];#增
+alter le [tableName] drop column [columnName]; #删
 show columns from [tableName]; #查
 
 
@@ -74,7 +74,32 @@ select * from [tableName] as [other-tableName] where [other-tableName].id<5;
 
 -- in
 select * from student where age IN (select age from student where score>60) 在score>60
-select * from student where age IN(20,21,22) 
+select * from student where age IN(20,21,22)
+
+-- join 连接（多表查询）
+-- 内连接
+select *  from  [表A] a  inner  join  [表B] b  on  a.key = b.key;
+-- 左连接/左外连接
+select  *  from  [表A] a  left  join  [表B] a  on  a.key = b.key;
+-- 右连接/右外连接
+select  *  from  [表A] a  right join  [表B] b  on  a.key = b.key;
+-- 全连接/全外连接
+select * from  [表A] a  left join  [表B] b  on  a.key = b.key 
+union
+select * from  [表A] a  right join  [表B] b  on  a.key = b.key;
+-- 单独左连接
+select  *  from  [表A] a  left  join  [表B] b  on  a.key = b.key  where  b.key is null;
+-- 单独右连接
+select  *  from  [表A] a  right join [表B] b  on  a.key = b.key  where  a.key is null;
+-- 单独全连接
+select * from  [表A] a  left join  [表B] b  on  a.key = b.key where b.key is null
+union
+select * from  [表A] a  right join  [表B] b  on  a.key = b.key where a.key is null;
+
+-- 展示正在运行的sql
+show processlist
+-- 强制停止
+kill [id]
 ```
 
 

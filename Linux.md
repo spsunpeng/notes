@@ -37,38 +37,17 @@ refreshSkuInfo
 
 ### 二、过滤 grep
 
-#### 1、使用方法
-
-grep  -参数  "字段"  filename
-
-- 参数
-
-  - -E:  或
-  
-  - -r ：进入目录搜索
-  
-  - -n :  显示行号
-  - -A/B/C  number 显示匹配内容以及后/前/前后几行内容
-- 搜索条件
-
-  - "word" ： 搜索含有word的，支持汉字、特殊字符、空格
-
-  - 支持部分正则表达式 "getDictData.*7," 搜索含有 getDictData和7
-
-  - “word1|word2” ：参数没有-E则|就是原意，若有则表示或
-
-- fileName：可以是文件，也可以是目录(-r)
-
-#### 2、示例
-
-- grep “word” fliename                                   含有word
-- grep “汉字| :word” fliename                       含有汉字| :word
-- grep -E “word1|word2” fliename               含有word1或word1
-
-- grep "word1.*word2" fliename                  含有word1和word2（有word1...word2）
-- grep “word1” fliename grep "word2"        含有word1和word2（有word2的基础上有word1）
-
-- grep -C 5 "word" filename                           含有word以及他前后5行的
+```sh
+grep  "[关键字]" [filename] -[参数] --color=auto
+grep "word" address.log					 #word
+grep "word1|word2" address.log           #word1|word2
+grep "word1|word2" address.log -E        #word1或word2
+grep "word1.*word2" address.log 		 #word1...word2 (正则表达式)
+grep "word1" address.log | grep "word2"  #word1且word2 (多次过滤)
+grep "word" address.log -C 5             #前后5行 (-A后，-B前，-C前后)
+grep "word" address.log --color=auto     #高亮显示过滤的字符串
+grep "word" log -r                       #进入目录
+```
 
 
 
@@ -148,6 +127,13 @@ scp t1.txt 10.1.20.237:. #复制到家目录下
 ssh [user]@[ip]
 ssh root@10.1.20.237
 ps -ef | grep ssh #是否启动
+
+
+#=============================================网络端口=================================================
+netstat -anp #显示系统端口使用情况
+netstat -tulpn #UDP类型和TCP类型的端口
+netstat -nupl #UDP类型的端口
+netstat -ntpl #TCP类型的端口
 ```
 
 #### 2、window基本命令
@@ -452,6 +438,48 @@ kill -9 [pid] #通过信号的方式杀死进程
 #kill杀死不了守护进程，会有其他信号不断重启守护进程，一般守护进程都带d，如mysqld
 
 ```
+
+
+
+
+
+### 六、XShell
+
+#### 1、使用
+
+##### 1.1 xshell突出显示
+
+![image-20220622160155857](linux.assets/image-20220622160155857.png)
+
+
+
+- 字符串
+
+  红色部分：sh-4.1#
+
+- 正则表达式
+
+  绿色部分：
+
+  ```
+  SL\|3\|[0-2][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]
+  ```
+
+##### 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

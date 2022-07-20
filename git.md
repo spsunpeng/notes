@@ -1,3 +1,5 @@
+# 一、git
+
 ### 0、命令
 
 ```sh
@@ -35,9 +37,10 @@ git branch -u origin [branchName] #追踪远程分支，单独操作没用
 git branch -d [branchName] #删除分支
 git branch -D [branchName] #强制删除分支
 #创建分支（创建、追踪、切换）
-git checkout -b {newdev} develop  #根据develop创建newdev分支，本地大改动时用
+git checkout -b [newBranch] develop  #根据develop创建newdev分支，本地大改动时用
 git checkout -b release origin/release #根据origin/release创建release分支，没什么用
 git checkout -b origin/feature origin/develop #不由本地操作，而由远程操作。
+git checkout -b [newBranch] tag #根据远程tag创建新分支
 #所以，建议创建分支时要明确根据哪个分支创建
 #合并分支
 git merge [branchName]
@@ -255,5 +258,38 @@ HEAD指针：本地仓库每个分支上的代码的修改都会生成一个comm
   - 回退一个版本：不会产生冲突
   - 回退多个版本：由于中间版本的影响，产生的冲突需要merge
   - 回退几十个版本：新建分支或tag，然后再回退，解决冲突时直接选择“right”
+
+
+
+
+
+# 二、gitlab
+
+### 1、gitlab集成jenkins
+
+- gitlab集成jenkins
+
+![image-20220704170007704](git.assets/image-20220704170007704.png)
+
+- 新增集成
+
+![image-20220704165555132](git.assets/image-20220704165555132.png)
+
+- jenkins配置：构建触发器
+
+![image-20220704165735063](git.assets/image-20220704165735063.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

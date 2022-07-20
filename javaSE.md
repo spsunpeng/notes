@@ -231,31 +231,28 @@ FilterInputStream\ FilterOutputStream \BufferedInputStream\BufferedOutputStream�
 
 #### 4.1 结构
 
-- Collection    
+- *Collection*    
+- *set*
+    - HashSet 两者之间
+    - LinkHashSet
+    - TreeSet 
 
-  - set
+  - *list*
+- LinkHashMap 改快读慢
+  
+- LinkHashMap 读快改慢
+  
+- *Vector*
+  
+- Stack 栈：后进先出，栈是限定仅在表尾（栈顶，表头称作栈底）进行插入和删除操作的线性表。
+  
+- *Queue*
+  - LinkendList  队列，先进后出
 
-    **HashSet** 两者之间
-
-  - list
-
-    - **LinkedList** 改快读慢
-
-    - **ArrayList** 读快改慢
-
-  - Vector
-
-  - **Stack**
-
-  - Queue
-
-    - **LinkedList**
-
-- Map
-
-  - **HashMap**
-
-  - **TreeMap**
+- *Map*
+- HashMap
+    - LinkHashMap
+- TreeMap
 
 #### 4.2 增删查改
 
@@ -310,6 +307,9 @@ Collections中的算法只对List实现，因为List是有序的数据结构，�
 
 注意：不起作用，可能是和输入法的快捷键重复
 
+- alt + insert  生成类方法
+- alt + enter  联想/解决
+- ctrl + alt + T  为选中的代码块生成环绕方法(eg: try...catch)
 - 搜索
   - 搜索当前文件：alt + f
   - 搜索全部文件：alt + F
@@ -322,9 +322,8 @@ Collections中的算法只对List实现，因为List是有序的数据结构，�
 - 实现/覆写
   - ctrl + o: 覆写方法
   - ctrl + i：实现接口中的方法
-- 其他
-  - ctrl + shift + u：大小写转换
-  - ctr + z/Z：回退/取消撤销
+- 回退/取消撤销：ctr + z/Z
+- 大小写转换：ctrl + shift + u
 - 查看子类：ctrl + h
 - 调整idea编译检查的级别：ctrl + alt + shift + h
 

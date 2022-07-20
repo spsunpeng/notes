@@ -604,10 +604,11 @@ spring:
     password: 610527
     driver-class-name: com.mysql.jdbc.Driver
   jpa:
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: ture
+    show-sql: true #打印sql日志
+    hibernate:
+      format_sql: ture #漂亮的sql日志
+      ddl-auto: update #更新或者创建数据表结构
+        
 ```
 
 
