@@ -105,6 +105,15 @@ public class UserService implements UserDetailsService {
 
   
 
+## 4、名词定义
+
+- RBAC：Role-BasedAccess Control的英文缩写，意思是基于角色的访问控制。
+
+- SSO:  Single Sign-On，中文意即单点登录
+- jwt：toekn格式
+- oauth2：为客户端授权
+- OpenId：中心化的网上身份认证系统
+
 
 
 # 一、Spring Security简介
@@ -879,7 +888,7 @@ userDetails.getAuthorities();
 
 
 
-# 九、源码-登录授权-core
+# 九、源码-登录认证授权-core
 
 见msb老师的笔记
 
@@ -899,7 +908,7 @@ attemptAuthentication 尝试身份验证
 
 
 
-# 十、源码-认证鉴权-filter
+# 十、源码-校验身份鉴权-filter
 
 见msb老师的笔记
 

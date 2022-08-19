@@ -623,7 +623,9 @@ mysql server 5.7   <==> mysql-connector-java 5.1.17 <==>  driver: com.mysql.jdbc
 
 ### 2、其他
 
-2.1 自动更新时间
+#### 2.1 自动更新时间
+
+entity
 
 ```java
 import javax.persistence.EntityListeners;
@@ -632,18 +634,90 @@ import java.util.Date;
 
 @EntityListeners(AuditingEntityListener.class)
 @MappedSuperclass
+@Data
 public class BaseEntity {
     @CreatedDate
     private Date createTime;
     @LastModifiedDate
     private Date updateTime;
 }
-
-//在application类上加上此注解
-@EnableJpaAuditing
 ```
 
+appliation
 
+```java
+@SpringBootApplication
+@EnableJpaAuditing
+public class MyApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(MyApplication.class, args);
+    }
+}
+```
+
+#### 2.2 回滚
+
+```java
+@Service
+public class UserService {
+
+    @Autowired
+    UserDao userDao;
+
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public void getCount(){
+        long count1 = userDao.count();
+        System.out.println(count1);
+
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        long count2 = userDao.count();
+        System.out.println(count2);
+    }
+
+    public void add(){
+        User user = new User();
+        user.setName("sp1");
+        userDao.save(user);
+        System.out.println(user);
+    }
+
+
+    public void update(){
+        User user = userDao.getOne(1L);
+        user.setName("haoyun");
+        user.setMoney("105");
+        userDao.save(user);
+        System.out.println(user);
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public void get() {
+        User user = userDao.getOne(1L);
+        System.out.println(user);
+        try {
+            Thread.sleep(5*1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        User newUser = userDao.getOne(1L);
+        System.out.println(newUser);
+    }
+
+    public static void main(String[] args) {
+        Integer storebb = 1;
+        long storebb2 = 1L;
+        System.out.println(Objects.equals(storebb, storebb2));
+        System.out.println(storebb == storebb2);
+    }
+
+
+}
+```
 
 # 三、mybatis
 
