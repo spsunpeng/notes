@@ -96,10 +96,37 @@ select * from  [表A] a  left join  [表B] b  on  a.key = b.key where b.key is n
 union
 select * from  [表A] a  right join  [表B] b  on  a.key = b.key where a.key is null;
 
+
+-- ============================复合sql：根据select编辑insert/update/delete数据=================================
+-- 一条sql中如果通知存在查询和编辑，需要重命名，不然会报错：you can't specify target table 【tableName】 for update in from clause
+-- 1.查询(不需要为查询的结果重命名，因为没有编辑，进士在查询)
+select * from t_basedata_dictdata where bd_type=6 and parent_bd_code=-1 and bd_code not in (select bd_code from t_basedata_dictdata where bd_type=7 and parent_bd_code=-1)
+-- 2.删除(需要为查询的结果重命名)
+Delete from t_basedata_dictdata where bd_type=6 and parent_bd_code=-1 and bd_code not in (select bd_code from (select bd_code from t_basedata_dictdata where bd_type=7 and parent_bd_code=-1) bc)
+-- 3.新增(需要为查询的结果重命名)
+INSERT INTO `t_system_system_resource`(`pid`, `url`, `content`, `create_time`, `state`, `grade`, `front_path`, `sort`) VALUES ((SELECT resource_id FROM ( SELECT resource_id FROM t_system_system_resource WHERE front_path = '/sysset_notice_set') ri), '/', '活动推送', now(), 1, 3, '/sysset_notice_set/advert', 0);
+-- 4.新增(不需要为查询的结果重命名，因为操作的不是同一张表)
+INSERT INTO `t_system_system_resource_role`(`resource_id`, `role_id`, `create_time`) VALUES ((SELECT MAX(resource_id) FROM t_system_system_resource), 1, NOW());
+
+
+-- explain 解释(是否命中索引)
+explain select * from t_basedata_dictdata where bd_code = 1010000 and bd_type = 2;
+
+
+-- LIMIT 分页
+select * from table_name LIMIT [pageNum], [pageSize];
+-- 参数：pageNum表示从第几条（与java.page不一样：第几页），pageSize表示查询几条，
+-- 当数据库过大，第一个参数越大查询越慢，需要注意。
+
+
 -- 展示正在运行的sql
 show processlist
 -- 强制停止
 kill [id]
+
+
+-- 不等于
+-- mysql中不等于 <>  和 != 都可以表示不等于，不过 <> 在所有的sql语句中都是通用的。
 ```
 
 
@@ -185,19 +212,6 @@ SELECT * FROM students cross join classes; 《=》 SELECT * FROM students, class
 
 
 
-### sql优化
-
-- 添加索引
-  - 主键索引
-  - 普通索引
-  - 唯一索引
-  - 联合索引
-- 不添加索引
-  - 筛选条件 =  >  <
-  - 筛选顺序 like
-
-
-
 ### 锁
 
 乐观锁：乐观锁是一种思想，表中有一个版本字段，第一次读的时候，获取到这个字段。处理完业务逻辑开始更新的时候，需要再次查看该字段的值是否和第一次的一样。如果一样更新，反之拒绝。之所以叫乐观，因为这个模式没有从数据库加锁。数据版本记录机制的实现。
@@ -210,130 +224,7 @@ SELECT * FROM students cross join classes; 《=》 SELECT * FROM students, class
 
 
 
-## 
-
-### Navicat快捷键
-
-| **快捷键**                                         | **功能**                     |
-| -------------------------------------------------- | ---------------------------- |
-| Ctrl+Q/N                                           | 打开一个新的查询窗口         |
-| Ctrl+W                                             | 关闭一个查询窗口             |
-| F6                                                 | 打开一个mysql命令行窗口      |
-|                                                    |                              |
-| Ctrl+/                                             | 注释sql语句                  |
-| Ctrl+Shift +/                                      | 解除注释                     |
-|                                                    |                              |
-| Ctrl+r                                             | 运行选中的sql语句            |
-| 1.定位到行首(home)， 2.从行首连选到行尾(Shift+end) | 选中当前行{从行首连选到行尾} |
-|                                                    |                              |
-| Ctrl+L                                             | 删除一行                     |
-| Ctrl+D                                             | 复制当前行                   |
-|                                                    |                              |
-|                                                    |                              |
-
-
-
-
-
-
-
-### jpa
-
-jpa：是orm框架的规范(解决持久层设计上的差异)，仅定义了一些接口
-
-Hibermate：是对jpa规范的实现；
-
-springData：不是jpa规范的实现，仅是抽象上的含义。
-
-jdba：是访问数据库的规范(解决各个数据库使用的差异)与实现
-
-
-
-### Druid
-
-Druid是一个JDBC组件
-
-
-
-### jpa的Entity层 与 数据库表
-
-jpa的Entity层         数据库表    启动成功否           结论 
-
-​    无@id                      任意             否                 程序只检查自己的语法，jpa必须要有主键，即使有相应的表
-
-​    @id                          任意             是                 有主键就启动成功，mysql若没有表则建立
-
-@id + @id                   任意             否                  程序只检查自己的语法，即使有相应的数据库表
-
-@id+@id+@IdClass   任意             是                 正确，无论数据库表自己有几个主键
-
-结论：实际中要一一对应，不要因为能启动成功就随意使用，以免后续的增删改查操作发生未知错误。
-
-
-
-
-
-### 设置字段的默认值
-
-alter table users_info alter column role_id set default 1
-
-
-
-
-
-### mysql的varchar(1)
-
-mysql的varchar(1)同时兼容java和C++中的char、char[]、string吗？
-
-
-
-
-
-### jba注解之@Column
-
-@Column(name="columnName", length=32) 
-
-private String columnName;
-
-可以直接映射到表中的字段，创建时生效，但不能修改已创建的表
-
-
-
-### sql不等于
-
-mysql中不等于 <>  和 != 都可以表示不等于，不过 <> 在所有的sql语句中都是通用的。
-
-
-
-
-
-### jps: Specification：cb.and()
-
-cb.and(predicate1, null)
-
-cd.and：and毋庸置疑就是且，但是 predicate1 and null 结果是 predicate1 
-
-cd.or：or毋庸置疑就是或，但是 predicate1 or null 结果是 null
-
-综上所述，Specification认为null表示所有，而非一个没有
-
-
-
-###  JPA：事务
-
-```java
-  @Modifying
-  @Transactional
-  @Query("delete from User u where u.active = false")
-  void deleteInactiveUsers();
-```
-
-- @Modifying的主要作用是声明执行的SQL语句是更新（增删改）操作，（仅仅只是声明）。
-- @Transactional的主要作用是提供事务支持（JPA默认会依赖JDBC默认隔离级别，即默认只读，所以增删改需要此注解支持）
-
-
-
-### 联合主键索引
+### explain
 
 t_basedata_dictdata (PK: bd_type, bd_code)
 
@@ -345,47 +236,6 @@ explain select * from t_basedata_dictdata where bd_type = 2;
 ```
 
 ![](db.assets/联合主键索引.png)
-
-
-
-### mysql表的字段与mysql关键字重名
-
-坑：使用Navicat Premium图形化界面建表，没有用mysql语句建表，使得即使重名也能建表成功。
-
-导致：后面再使用Navicat Premium操作表，如增删行不会，不会报错，
-
-但是，使用mysql语句插入，会报错，但由于mysql语句时自己当场写的，这个错还很直接，查看mysql语句总会发现。
-
-但是，使用springboot和jpa和mysql框架时：根本找不到错误再哪里？控制台会报sql语句出错，但这样完全不直观，根本想不通sql哪里出错了。
-
-
-
-### mysql 根据条件删除数据
-
-```sql
-#查询
-select * from t_basedata_dictdata where bd_type=6 and parent_bd_code=-1 and bd_code not in (select bd_code from t_basedata_dictdata where bd_type=7 and parent_bd_code=-1)
-
-#删除
-Delete from t_basedata_dictdata where bd_type=6 and parent_bd_code=-1 and bd_code not in (select bd_code from (select bd_code from t_basedata_dictdata where bd_type=7 and parent_bd_code=-1) bc)
-```
-
-删除的不同点，多包装了一层
-
-(select bd_code from (select bd_code from t_basedata_dictdata where bd_type=7 and parent_bd_code=-1) bc)
-
-将查询到的bd_code重命名为bc，然后再查询。但不明白为什么这么做
-
-
-
-### limit
-
-```sql
-select * from table_name LIMIT ?, ?
---第一个问好表示从第几个开始，第二个问好表示查询几个
-```
-
-
 
 
 
@@ -406,13 +256,7 @@ set session transaction isolation level read uncommitted; --设置隔离级别
 
 
 
-
-
-事务
-
-原子性
-
-隔离性
+事务，原子性，隔离性
 
 
 
@@ -457,7 +301,40 @@ Read Uncommitted(读取未提交内容)
 
 
 
+# 二、Navicat
 
+## 1、快捷键
+
+| **快捷键**                                         | **功能**                     |
+| -------------------------------------------------- | ---------------------------- |
+| Ctrl+Q/N                                           | 打开一个新的查询窗口         |
+| Ctrl+W                                             | 关闭一个查询窗口             |
+| F6                                                 | 打开一个mysql命令行窗口      |
+|                                                    |                              |
+| Ctrl+/                                             | 注释sql语句                  |
+| Ctrl+Shift +/                                      | 解除注释                     |
+|                                                    |                              |
+| Ctrl+r                                             | 运行选中的sql语句            |
+| 1.定位到行首(home)， 2.从行首连选到行尾(Shift+end) | 选中当前行{从行首连选到行尾} |
+|                                                    |                              |
+| Ctrl+L                                             | 删除一行                     |
+| Ctrl+D                                             | 复制当前行                   |
+|                                                    |                              |
+|                                                    |                              |
+
+
+
+## 2、翻车日记
+
+### 2.1 字段与mysql关键字重名
+
+坑：使用Navicat Premium图形化界面建表，没有用mysql语句建表，使得即使重名也能建表成功。
+
+导致：后面再使用Navicat Premium操作表，如增删行不会，不会报错，
+
+但是，使用mysql语句插入，会报错，但由于mysql语句时自己当场写的，这个错还很直接，查看mysql语句总会发现。
+
+但是，使用springboot和jpa和mysql框架时：根本找不到错误再哪里？控制台会报sql语句出错，但这样完全不直观，根本想不通sql哪里出错了。
 
 
 

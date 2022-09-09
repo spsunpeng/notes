@@ -1,3 +1,7 @@
+# 快速使用
+
+## 1、概念
+
 jpa：是orm框架的规范(解决持久层设计上的差异)，仅定义了一些接口
 
 Hibermate：是对jpa规范的实现；
@@ -718,6 +722,32 @@ public class UserService {
 
 }
 ```
+
+#### 2.3 Specification
+
+cb.and(predicate1, null)
+
+cd.and：and毋庸置疑就是且，但是 predicate1 and null 结果是 predicate1 
+
+cd.or：or毋庸置疑就是或，但是 predicate1 or null 结果是 null
+
+综上所述，Specification认为null表示所有，而非一个没有
+
+
+
+####  2.4 事务
+
+```java
+  @Modifying
+  @Transactional
+  @Query("delete from User u where u.active = false")
+  void deleteInactiveUsers();
+```
+
+- @Modifying的主要作用是声明执行的SQL语句是更新（增删改）操作，（仅仅只是声明）。
+- @Transactional的主要作用是提供事务支持（JPA默认会依赖JDBC默认隔离级别，即默认只读，所以增删改需要此注解支持）
+
+
 
 # 三、mybatis
 

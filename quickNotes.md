@@ -528,13 +528,11 @@ pm.environment.set("vop_open_token", "Bearer "+jsonData.result.accessToken);
 
 
 
-
-
 # 2022-06
 
 ### 1、notepad++
 
-换行符是 /r/n
+换行符是 \r\n
 
 
 
@@ -576,6 +574,24 @@ F5可能得到的是浏览器缓存的数据，如果是浏览器缓存则会返
 ### 3、SPI
 
 SPI全称Service Provider Interface，是Java提供的一套用来被第三方实现或者扩展的API，它可以用来启用框架扩展和替换组件。
+
+
+
+
+
+# 2022-08
+
+### 1、springboot版本管理
+
+- parent
+
+- 多个parent：dependencyManagement，
+
+  g2自定义parent，还要用spring-boot-parent，spring-cloud-parent
+
+- springboot的版本管理是：spring-boot-dependencies
+
+
 
 
 

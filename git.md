@@ -3,6 +3,7 @@
 ### 0、命令
 
 ```sh
+#============================================基本===============================================
 #配置user.name和user.email
 git config --global user.name "sunpengHome"
 git config --global user.email "476567162@qq.com"
@@ -25,6 +26,7 @@ git reset --soft 版本的索引号/HEAD   #仅回退本地仓库
 git  diff  无/版本索引/head  filename #比较暂存区的其它文件的目录，hard（重）
 git  diff  无  filename 				#比较的本地与暂存区
 
+#============================================分支===============================================
 #查看分支
 git branch
 #-a  查看所有远程
@@ -44,8 +46,10 @@ git checkout -b [newBranch] tag #根据远程tag创建新分支
 #所以，建议创建分支时要明确根据哪个分支创建
 #合并分支
 git merge [branchName]
+#修改追踪的分支
+git branch --set-upstream-to=origin/[remoteBranchName] [localBranchName]
 
-#==========================================tag================================================
+#==========================================tag=================================================
 git tag #查
 git tag -a [new-tagname] -m ["commit"] #增
 git tag -d [tagname] #删
