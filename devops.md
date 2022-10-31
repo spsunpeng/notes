@@ -222,6 +222,11 @@ docker run -p 8000:8080 --name v1 -v /usr/local/dockershare:/usr/local/tomcat/we
 #通过共享容器映射地址
 docker create --name webpage -v /usr/local/dockershare:/usr/local/tomcat/webapps tomcat /bin/true 
 docker run --name t3 -d --volumes-from webpage -p 8005:8080 tomcat
+
+
+#==========================================五、容器和宿主机交互===============================================
+#文件交互
+docker cp /usr/docker/test/keumserver.war 5afa30495e63:/usr/local/tomcat/webapps
 ```
 
 
@@ -305,6 +310,8 @@ docker-compose up -d #运行
 docker-compose logs [docker-id|docker-name] #查看日志
 docker-compose down #下线
 ```
+
+
 
 
 

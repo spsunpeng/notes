@@ -597,6 +597,54 @@ SPI全称Service Provider Interface，是Java提供的一套用来被第三方�
 
 
 
+centos docker k8s jenkins gitlab
+
+
+
+mysql rabbitmq kafaka xxl-job redis 
+
+maven gradle 远程仓库
+
+springcloud euraka servicecomb
+
+nacos etcd config
+
+swagger
+
+springboot springmvc
+
+resttemplate feign ribbon
+
+actuator admin prometheus grafana
+
+sleuth zipkin
+
+springsecurity gateway oauth2 zuul
+
+log kibana
+
+分布式事务
+
+hystrix
+
+jpa mybatisplus
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

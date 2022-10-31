@@ -9,9 +9,11 @@
 </dependency>
 ```
 
-用户名：user
-
-密码：启动日志会打印
+- springboot集成springsecurity
+- 启动
+- 任意访问，自动跳到登录页面
+- 用户名：user
+- 密码：启动日志会打印
 
 ## 2、知识点整理
 
@@ -110,9 +112,9 @@ public class UserService implements UserDetailsService {
 - RBAC：Role-BasedAccess Control的英文缩写，意思是基于角色的访问控制。
 
 - SSO:  Single Sign-On，中文意即单点登录
-- jwt：toekn格式
+- jwt：token格式
 - oauth2：为客户端授权
-- OpenId：中心化的网上身份认证系统
+- OpenId：去中心化的网上身份认证系统
 
 
 
@@ -134,8 +136,7 @@ public class UserService implements UserDetailsService {
 
 ## 3、shiro
 
-​    Shiro 是 Java 的一个安全框架。目前，使用 Apache Shiro 的人越来越多，因为它相 当简单，对比 Spring
-Security，可能没有 Spring Security 做的功能强大，但是在实际工作时 可能并不需要那么复杂的东西，所以使用小而简单的Shiro 就足够了。
+​    Shiro 是 Java 的一个安全框架。目前，使用 Apache Shiro 的人越来越多，因为它相当简单，对比 SpringSecurity，可能没有 Spring Security 做的功能强大，但是在实际工作时可能并不需要那么复杂的东西，所以使用小而简单的 Shiro 就足够了。
 
 
 
@@ -905,6 +906,60 @@ Context 上下文
 Authentication 认证（名词）
 
 attemptAuthentication 尝试身份验证
+
+principal 主体，用户信息
+
+
+
+spring-security-core: SpringSecurity的核心jar包，认证和授权的核心代码都在这里面
+
+spring-security-config: 配置
+
+spring-security-web：用于Spring Security web身份验证服务和基于url的访问控制  
+
+
+
+
+
+Authentication：认证对应的实体类
+
+- UsernamePasswordAuthenticationToken 自定义UserService中使用的
+- OAuth2Authentication
+
+SecurityContext：存储
+
+SecurityContextHolder：存储策略
+
+SecurityContextHolderStrategy 策略接口
+
+- GlobalSecurityContextHolderStrategy：把SecurityContext存储为static变量 
+- InheritableThreadLocalSecurityContextStrategy ：把SecurityContext存储在InheritableThreadLocal中，让父子线程都可以使用
+- ThreadLocalSecurityContextStrategy：把SecurityContext存储在ThreadLocal中，只有当前线程可以使用
+
+
+
+```java
+Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+Object principal = authentication.getPrincipal();  //java.security.Principal包下
+UserDetails userDetails = (UserDetails) principal;
+```
+
+
+
+
+
+- User
+- UserDetails
+
+- UserDetailsService
+
+
+
+authenticate 鉴定
+
+
+
+
 
 
 

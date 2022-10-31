@@ -61,6 +61,9 @@ git remote -v #查看连接
 git remte set-url origin [URL] #修改url链接 
 git remote rm origin #删除url链接 
 git remote add origin [url] #添加url链接 
+
+#=========================================compare 对比================================================
+git compare [branchName] with [otherBranchName]
 ```
 
 

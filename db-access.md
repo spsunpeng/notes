@@ -955,139 +955,62 @@ public class Test01 {
 
 
 
-### 三、springboot整合mybatis-plus
+# 四、springboot整合mybatis-plus
 
-#### 1.新建spring Initializr工程
+## 1、入门
 
-选择spingboot、mybatis、mysql依赖
+### 1.1 pom
 
 ```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
+	 <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.4.1</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <version>2.6.11</version>
     </parent>
-    <groupId>com.sunpeng</groupId>
-    <artifactId>mybatis</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>mybatis</name>
-    <description>Demo project for Spring Boot</description>
-
-    <properties>
-        <java.version>1.8</java.version>
-    </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <version>3.5.2</version>
+        </dependency>
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>3.0.5</version>
-        </dependency>
 
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
     </dependencies>
-
-</project>
 ```
 
-#### 2.配置application.yml
+### 1.2 application.yaml
 
 ```yml
 spring:
   datasource:
     username: root
-    password: 610527
-    url: jdbc:mysql://127.0.0.1:3306/mydatabase?useSSL=false&useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    password: root
+    url: jdbc:mysql://127.0.0.1:3306/sp?useSSL=false&useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     driver-class-name: com.mysql.cj.jdbc.Driver
-  profiles:
-    active: dev
+
 mybatis-plus:
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-  global-config:
-    db-config:
-      logic-delete-value: 1
-      logic-not-delete-value: 0
-  #mapper-locations: classpath:UmsMemberMapper.xml
-  #mapper-locations: classpath*:mapper/*.xml
-  mapper-locations:
-  - classpath*:/com/msb/msbdongbaoums/mapper/xml/*.xml
+  mapper-locations: classpath:mapper/*.xml
+
+#mybatis-plus的sql日志是debug级别
+logging:
+  level:
+    com.sp.mapper: debug
 ```
 
-#### 3.编码与Mapper映射
-
-##### 3.1 entity
-
-```java
-public class Student {
-    private Long id;
-    private String name;
-    private Double score;
-    private Integer age;
-    
-    //get、set
-}
-```
-
-##### 3.2 Mapper.java
-
-```java
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.sunpeng.mybatis.entity.Student;
-import org.springframework.stereotype.Repository;
-
-@Repository
-public interface StudentMapper extends BaseMapper<Student> {
-    public Student selectById(Integer id);
-}
-```
-
-##### 3.2 Mapper.xml
-
-```xml
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.sunpeng.mybatis.mapper.StudentMapper">
-
-    <select id="selectById" resultType="com.sunpeng.mybatis.entity.Student">
-      select * from student where id = #{id}
-    </select>
-
-</mapper>
-```
-
-#### 4.运行与测试
-
-##### 4.1Application.class
+### 1.3 Application.class
 
 ```java
 import org.mybatis.spring.annotation.MapperScan;
@@ -1103,76 +1026,413 @@ public class MybatisApplication {
 }
 ```
 
-##### 4.2测试
+## 2、entity
 
 ```java
-import com.sunpeng.mybatis.mapper.StudentMapper;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+@Data
+@TableName(value = "mybatis_plus_person")
+public class Person {
+    @TableId(type = IdType.INPUT)
+    private Integer personId;
+    private String name;
+    private Integer age;
+    private String fatherName;
+}
+```
 
-@SpringBootTest
-class MybatisApplicationTests {
+### 2.1 @TableName 表名
+
+`@TableName(value = "mybatis_plus_user")`
+
+> 映射表名，如果类名是 MybatisPlusPerson 可以自动转换，那么就可以省略此注解。
+
+### 2.2 @TableId 主键
+
+`@TableId(type = IdType.INPUT)`
+
+> 主键，省略是框架葵酱 id 作为主键，如果它不是表中的主键或者压根没有这个字段，那么就会出错。
+>
+> IdType.ID_WORKER_STR 默认的;底层使用了雪花算法；类型为Integer
+> IdType.AUTO 数据库自增；数据库上也要勾上自增
+> IdType.NONE 没有设置主键类型；跟随全局；全局的主键策略如果没有设置，默认是雪花算法
+> IdType.INPUT 手动输入;必须手动输入，数据库自增也没用； 实测可以不输入
+> IdType.UUID 全局唯一id；无序;字符串； 
+> ID_WORKER_STR 全局唯一（idWorker的字符串表示)；
+
+### 2.3 字段
+
+实体类的字段可少不可多
+
+
+
+## 3、Mapper.xml
+
+```java
+@Repository
+public interface UserMapper extends BaseMapper<User> {
+
+    User selectByAliasName(@Param("name") String aliasName);
+
+    User selectByName(String name);
+
+    List<User> selectSort(String orderBy);
+}
+```
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.mapper.UserMapper">
+
+    <select id="selectByName" resultType="com.sp.entity.User">
+        select * from mybatis_plus_user where name = #{name}
+    </select>
+
+    <select id="selectByAliasName" resultType="com.sp.entity.User">
+        select * from mybatis_plus_user where name = #{name}
+    </select>
+
+    <select id="selectSort" resultType="com.sp.entity.User">
+        select * from mybatis_plus_user order by ${orderBy}
+    </select>
+
+</mapper>
+```
+
+### 3.1 @Param 别名
+
+```
+@Param 别名
+User selectByAliasName(@Param("name") String aliasName);
+User selectByName(String name);
+```
+
+### 3.2 $ and #
+
+```sql
+SELECT * FROM t_system_system_resource where state = #{state} and grade = #{grade} order by ${orderBy}
+```
+
+`#`相比`$`可以防sql注入，比如`grade = 1(int)`，但是某些情况并不适用，比如 order by sort(String)，此时排序就会失效。
+
+### 3.3 limit 
+
+```sql
+SELECT * FROM t_system_system_resource ORDER BY sort ASC limit 1, 5
+SELECT * FROM t_system_system_resource limit 1, 5 ORDER BY sort ASC 
+```
+
+第二种sql语法错误，但是在mybatis-plus中，会忽略排序，让sql生效，好像不是这样的，记错了。
+
+
+
+## 4、BaseMapper
+
+```java
+@Repository
+public interface PersonMapper extends BaseMapper<Person> {
+}
+```
+
+```java
+package com.sp.controller;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.sp.entity.Person;
+import com.sp.mapper.PersonMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.*;
+
+@RestController
+@RequestMapping("/person")
+public class PersonController {
 
     @Autowired
-    StudentMapper studentMapper;
+    private PersonMapper personMapper;
 
-    @Test
-    void contextLoads() {
-        System.out.println(studentMapper.selectById(10));
+    @GetMapping("/allList")
+    public List<Person> allList(){
+        return personMapper.selectList(null);
+    }
+
+    @GetMapping("/selectList")
+    public List<Person> selectList(String name, String fatherName){
+        return personMapper.selectList(new QueryWrapper<Person>()
+                .eq("name", name)
+                .eq("father_name", fatherName));
+    }
+
+    @GetMapping("/dynamicSelect")
+    public List<Person> dynamicSelect(String name, String fatherName){
+        QueryWrapper<Person> wrapper = new QueryWrapper<Person>()
+                .eq(!StringUtils.isEmpty(name),"name", name)
+                .eq(!StringUtils.isEmpty(fatherName),"father_name", fatherName);
+        return personMapper.selectList(wrapper);
+    }
+
+    @GetMapping("/selectByMap")
+    public List<Person> selectByMap(String name, String fatherName){
+        Map<String, Object> map = new HashMap<>();
+        map.put("name", name);
+        map.put("father_name", fatherName);
+        return personMapper.selectByMap(map);
+    }
+
+    @GetMapping("/selectBatchIds")
+    public List<Person> selectBatchIds(String ids){
+        List<String> idList = Arrays.asList(ids.split(","));
+        return personMapper.selectBatchIds(idList);
+    }
+
+    @GetMapping("/selectPage")
+    public Page<Person> selectPage(long current, long size){
+        return personMapper.selectPage(new Page<Person>(current, size), null);
+    }
+
+
+    @GetMapping("/like")
+    public List<Person> like(String name){
+        return personMapper.selectList(new QueryWrapper<Person>()
+                .like(!StringUtils.isEmpty(name),"name", name));
+    }
+
+    @GetMapping("/sort")
+    public List<Person> sort(){
+        return personMapper.selectList(new QueryWrapper<Person>()
+                .orderByAsc("age")
+                .orderByDesc("person_id")
+        );
+    }
+
+    @GetMapping("/selectNull1")
+    public List<Person> selectNull1(){
+        return personMapper.selectList(null);
+    }
+
+    @GetMapping("/selectNull2")
+    public List<Person> selectNull2(){
+        return personMapper.selectList(new QueryWrapper<Person>());
+    }
+
+    // 错误示例，不支持逗号分隔
+    @GetMapping("/selectIn")
+    public List<Person> selectIn(){
+        return personMapper.selectList(new QueryWrapper<Person>().in("person_id", "1,3"));
+    }
+
+    @GetMapping("/selectInList")
+    public List<Person> selectInList(){
+        String ids = "1,3";
+        final List<String> list = Arrays.asList(ids.split(","));
+        return personMapper.selectList(new QueryWrapper<Person>().in("person_id", list));
+    }
+
+    
+    // deleteById 入参是空不会全表删除
+    @GetMapping("/deleteByIdNull")
+    public Integer deleteByIdNull(){
+        Integer id = null;
+        return personMapper.deleteById(id);
+    }
+    
+   //update
+    @GetMapping("/updateById")
+    public int updateById(Person person){
+        System.out.println(person);
+        return personMapper.updateById(person);
     }
 }
 ```
 
-#### 5.总结
-
-##### 5.1 springboot如何整合mybatis-plus
-
-- 全局配置：因为springboot有全局配置文件Application.yml文件，所以全局配置可以放到这里
-
-- 自动注入：studentMapper只是接口，如何创建对象并调用方法
-
-  普通：通过工厂才能创建出studentMapper的实体对象
-
-  ```java
-  String resource = "mybatis-config.xml";
-  InputStream inputStream = Resources.getResourceAsStream(resource);
-  SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
-  SqlSession sqlSession = sqlSessionFactory.openSession();
-  StudentMapper mapper = sqlSession.getMapper(StudentMapper.class);
-  //mapper是实现StudentMapper的对象，才能待用具体方法
-  Student student = mapper.selectById(10);
-  ```
-
-  springboot整合：springboot整合mybatis-plus
-
-  - 设置组件：在StudentMapper.class类上加注解 @Repository
-
-  - 实现接口：在Application.class类上加注解 @MapperScan("com.sunpeng.mybatis.mapper")
-
-  - 使用：@Autowired就可以自动导入了，实现的问题 @MapperScan 已经解决
-
-##### 5.2 mybatis-plus与mybatis的不同
-
-1）StudentMapper 继承BaseMapper<Student>，使得基本接口已经实现，不用再手动实现
+### 4.1 方法
 
 ```java
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-public interface StudentMapper extends BaseMapper<Student> {}
+package com.baomidou.mybatisplus.core.mapper;
+
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.core.toolkit.ExceptionUtils;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import org.apache.ibatis.annotations.Param;
+
+public interface BaseMapper<T> extends Mapper<T> {
+    int insert(T entity);
+
+    int deleteById(Serializable id);
+
+    int deleteById(T entity);
+
+    int deleteByMap(@Param("cm") Map<String, Object> columnMap);
+
+    int delete(@Param("ew") Wrapper<T> queryWrapper);
+
+    int deleteBatchIds(@Param("coll") Collection<?> idList);
+
+    int updateById(@Param("et") T entity);
+
+    int update(@Param("et") T entity, @Param("ew") Wrapper<T> updateWrapper);
+
+    T selectById(Serializable id);
+
+    List<T> selectBatchIds(@Param("coll") Collection<? extends Serializable> idList);
+
+    //通过map中元素查询，只能判断equal，不能根据字段是否非空而拼接sql
+    List<T> selectByMap(@Param("cm") Map<String, Object> columnMap);
+
+    default T selectOne(@Param("ew") Wrapper<T> queryWrapper) {
+        List<T> ts = this.selectList(queryWrapper);
+        if (CollectionUtils.isNotEmpty(ts)) {
+            if (ts.size() != 1) {
+                throw ExceptionUtils.mpe("One record is expected, but the query result is multiple records", new Object[0]);
+            } else {
+                return ts.get(0);
+            }
+        } else {
+            return null;
+        }
+    }
+
+    default boolean exists(Wrapper<T> queryWrapper) {
+        Long count = this.selectCount(queryWrapper);
+        return null != count && count > 0L;
+    }
+
+    Long selectCount(@Param("ew") Wrapper<T> queryWrapper);
+
+    List<T> selectList(@Param("ew") Wrapper<T> queryWrapper);
+
+    List<Map<String, Object>> selectMaps(@Param("ew") Wrapper<T> queryWrapper);
+
+    List<Object> selectObjs(@Param("ew") Wrapper<T> queryWrapper);
+
+    <P extends IPage<T>> P selectPage(P page, @Param("ew") Wrapper<T> queryWrapper);
+
+    <P extends IPage<Map<String, Object>>> P selectMapsPage(P page, @Param("ew") Wrapper<T> queryWrapper);
+}
 ```
 
 
 
+### 4.2 queryWrapper
+
+示例
+
+```java
+	@GetMapping("/dynamicSelect")
+    public List<Person> dynamicSelect(String name, String fatherName){
+        QueryWrapper<Person> wrapper = new QueryWrapper<Person>()
+                .eq(!StringUtils.isEmpty(name),"name", name)
+                .eq(!StringUtils.isEmpty(fatherName),"father_name", fatherName);
+        return personMapper.selectList(wrapper);
+    }
+```
+
+mybatis-plus中QueryWrapper常用的条件参数
+
+| **条件参数名** | **用法及作用**                    |
+| -------------- | --------------------------------- |
+| setSqlSelect   | 设置 SELECT 查询字段              |
+| where          | WHERE 语句，拼接 + WHERE 条件     |
+| andNew         | AND 语句，拼接 + AND (字段=值)    |
+| and            | AND 语句，拼接 + AND 字段=值      |
+| or             | OR 语句，拼接 + OR 字段=值        |
+| orNew          | OR 语句，拼接 + OR (字段=值)      |
+| eq             | 等于=                             |
+| allEq          | 基于 map 内容等于=                |
+| ne             | 不等于<>                          |
+| gt             | 大于>                             |
+| ge             | 大于等于>=                        |
+| lt             | 小于<                             |
+| le             | 小于等于<=                        |
+| like           | 模糊查询 LIKE                     |
+| notLike        | 模糊查询 NOT LIKE                 |
+| in             | IN 查询                           |
+| notIn          | NOT IN 查询                       |
+| isNull         | NULL 值查询                       |
+| isNotNull      | IS NOT NULL                       |
+| groupBy        | 分组 GROUP BY                     |
+| having         | HAVING 关键词                     |
+| orderBy        | 排序 ORDER BY                     |
+| orderAsc       | ASC 排序 ORDER BY                 |
+| orderDesc      | DESC 排序 ORDER BY                |
+| exists         | EXISTS 条件语句                   |
+| notExists      | NOT EXISTS 条件语句               |
+| between        | BETWEEN 条件语句                  |
+| notBetween     | NOT BETWEEN 条件语句              |
+| addFilter      | 自由拼接 SQL                      |
+| last           | 拼接在最后，例如：last(“LIMIT 1”) |
+
+#### 4.2.1 like
+
+变量不用加百分号
+
+#### 4.3.2 last
+
+```java
+	public void handlePage(QueryWrapper<T> queryWrapper, Page page) {
+        long pageSize = page.getSize();
+        if (pageSize > 500) {
+            String str = "limit %s offset %s ";
+            String lastLimit = String.format(str, pageSize, (page.getCurrent() - 1) * pageSize);
+            queryWrapper.last(lastLimit);
+            page.setSize(-1);
+        }
+    }
+```
+
+
+
+### 4.3 page
+
+```java
+    @GetMapping("/selectPage")
+    public Page<Person> selectPage(long current, long size){
+        return personMapper.selectPage(new Page<Person>(current, size), null);
+    }
+```
+
+#### 4.3.1 首页
+
+0,1 都是第一页，2是第二页
+
+
+
+### 4.4 all & null
+
+- 属性是空：即sql中某个字段==null，可以分为三种情况（接口都是一样的）：
+  - 主键是空：selectById(null)   updateById(null) 
+  - queryWrapper某个字段是空：new QueryWrapper<Person>() .eq("name", null)
+  - xml中的sql属性是空：select * from mybatis_plus_user where id = null
+  - 属性是对象，就是查询 字段 = null 的数据。**如果业务中有这个字段等于空的数据，会被查询和修改，需要注意。**
+  - 属性是基本类型，就是查询 字段 = 0 的数据。**如果业务中有这个字段等于零的数据，会被查询和修改，需要注意。**
+
+- queryWrapper是空，可以分为两种：
+  - 空：personMapper.selectList(null); 
+  - 空对象：personMapper.selectList(new QueryWrapper<Person>());
+  - 结果：它们查询的都是全部
+  - **注意：写操作，比如`delete(null)`会删除全表，一定要注意，一般业务只会根据主键删除`deleteById()`**
 
 
 
 
 
+## 3、其他
 
+### 3.1 之前版本分页最多500
 
-
-
-
+> 解决方方法是配置分页，或者升级版本，或者不用包装类，直接写sql
 
 
 

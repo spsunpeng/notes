@@ -1,4 +1,74 @@
-### 1、 JVM
+# 0、命令
+
+```sh
+#==================================================java=================================================
+ java -XX:+PrintCommandLineFlags -version
+ java -XX:+PrintFlagsFinal -version | grep :
+
+javac Person.java #编译，得到二级制文件
+java Person #执行，注意执行的不是Person.class文件，而是Person的全限定名
+javap -v -p Person.class >Person.txt #转化为类汇编语言
+
+java com.msb.HelloWord #需要放到包com/msb下，程序才能执行
+
+#=================================================jinfo=================================================
+ jinfo -flags [pid]
+
+
+#=================================================jstat=================================================
+ jstat -gcutil [pid]
+ jstat -gc [pid]
+ 
+
+#=================================================jstack=================================================
+
+
+
+
+#=================================================jmap=================================================
+jmap -dump:live,format=b,file=/dump.hprof [pid] #生成堆文件
+jmap -heap [pid] #打印堆信息
+
+```
+
+
+
+
+
+# 1、知识点
+
+#### 容器中取出dump.hprof文件
+
+```sh
+#容器
+jps #查看当前运行的java进程
+jmap -dump:live,format=b,file=/dump.hprof [pid] #生成堆文件
+jmap -heap [pid] #打印堆信息
+
+#容器宿主机（服务器）
+docker ps | grep "address"
+docker cp [commit-id]:/dump.hprof ./ #将容器内的文件复制到宿主机上
+
+#本机
+#使用xftp等工具将文件复制到本机上
+/jdk1.8.0_231/bin/jvisualvm.exe #使用管理员的身法打开jvisualvm
+#打开dump.hprof文件
+#选择类
+```
+
+![image-20221012155007918](jvm.assets/image-20221012155007918.png)
+
+
+
+
+
+
+
+
+
+
+
+#### JVM
 
 - java  ->  java 8.0
 
@@ -11,7 +81,7 @@
 
 
 
-### 2、class文件
+#### class文件
 
 - 打开：
 
@@ -29,7 +99,7 @@
 
 
 
-严镇涛
+
 
 
 
@@ -43,7 +113,7 @@
 
 
 
-notepad++ 查看二级制文件
+#### notepad++ 查看二级制文件
 
 安装插件
 
@@ -65,7 +135,7 @@ notepad++ --> View in --> 切换格式
 
 
 
-## java命令
+#### 编译命令
 
 ```sh
 javac Person.java #编译，得到二级制文件
@@ -85,13 +155,7 @@ java二级制文件（.class）文件查看方式
 
 
 
-声明周期
-
-装载  链接  初始化  使用  卸载
-
-
-
-
+#### 编译
 
 类加载-准备阶段
 
@@ -128,8 +192,6 @@ static 只开辟空间，为0
 
 
 
-
-
 1）Bootstrap ClassLoader 负责加载$JAVA_HOME中 jre/lib/rt.jar 里所有的class或Xbootclassoath选项指定的jar包。由C++实现，不是ClassLoader子类。
 
  2）Extension ClassLoader 负责加载java平台中扩展功能的一些jar包，包括$JAVA_HOME中jre/lib/*.jar 或 -Djava.ext.dirs指定目录下的jar包。 
@@ -142,7 +204,7 @@ static 只开辟空间，为0
 
 
 
-## 总结
+#### 声明周期
 
 - 编译（.java -> .class）
 
@@ -181,6 +243,8 @@ static 只开辟空间，为0
 
 
 
+#### 类加载器
+
 
 
 ![image-20220831092418424](jvm.assets/image-20220831092418424.png)
@@ -194,8 +258,6 @@ static 只开辟空间，为0
 
 
 SPI全称Service Provider Interface，是Java提供的一套用来被第三方实现或者扩展的API，它可以用来启用框架扩展和替换组件。
-
-
 
 
 
@@ -221,31 +283,7 @@ SPI全称Service Provider Interface，是Java提供的一套用来被第三方�
 
 
 
-com.msb.HelloWord
-
-需要放到包com/msb下，程序才能执行
-
-```sh
-java com.msb.HelloWord
-```
-
-
-
-常量 变量
-
-静态常量 静态变量
-
-字符串常量
-
-对象
-
-
-
-java 方法
-
-本地方法：被native修饰的方法
-
-
+#### 运行
 
 运行时数据区：
 
@@ -279,7 +317,7 @@ Object static o2 = new Object;
 
 
 
-
+#### 二进制
 
 bit： [bɪt] ，位，比特位
 
@@ -334,10 +372,6 @@ long：8个字节，范围 2^64
 
 
 
-
-
-
-
 | 16进制                   | 0X01          | 0X02      | 0X03      | 0X04      |
 | ------------------------ | ------------- | --------- | --------- | --------- |
 | 小端 16进制 short s = 1  | **01**        | 00        | 00        | 00        |
@@ -369,7 +403,7 @@ java中使用的是大端存储，操作系统一般用的是小端存储，C/C+
 
 
 
-
+#### cpu
 
 cpu：运算器，控制器，寄存器
 
@@ -388,7 +422,11 @@ cpu：运算器，控制器，寄存器
 
 
 
-java对象内存布局0
+
+
+#### 内存
+
+java对象内存布局
 
 - 对象头
 
@@ -415,7 +453,7 @@ User uer = new User()
 
 
 
-引用对象
+#### 引用对象
 
 引用对象的方式分为 直接指针访问对象 和 句柄访问对象。
 
@@ -432,7 +470,7 @@ JVM用的时直接指针访问对象
 
 
 
-指针压缩
+#### 指针压缩
 
 64位用的就是8字节地址吗？
 
@@ -448,7 +486,7 @@ JVM用的时直接指针访问对象
 
 
 
-对齐填充
+#### 对齐填充
 
 对齐填充保证对象大小是8字节的整数倍，这么做的原因是cpu每次读取8个字节的数据。
 
@@ -458,9 +496,7 @@ JVM用的时直接指针访问对象
 
 
 
-
-
-
+#### jvm内存
 
 ![972614631e384016960713173c1d97ab](jvm.assets/972614631e384016960713173c1d97ab.png)
 
@@ -496,7 +532,7 @@ young区进入old区，保证不用对象的快速gc，并且避免浪费gc的�
 
 
 
-
+#### gc
 
 youngGC    minorGC  parttialGC
 
@@ -526,7 +562,7 @@ old区将要满的时候触发fullGC，有四种情况：
 
 
 
-**堆内存中都是线程共享的区域吗？**
+堆内存中都是线程共享的区域吗？
 
 JVM默认为每个线程在Eden上开辟一个buffer区域，用来加速对象的分配，称之为TLAB，全称:Thread Local Allocation Buffer。
 对象优先会在TLAB上分配，但是TLAB空间通常会比较小，如果对象比较大，那么还是在共享区域分配。
@@ -545,7 +581,7 @@ JVM默认为每个线程在Eden上开辟一个buffer区域，用来加速对象�
 
 
 
-方法区
+#### 方法区1.7与1.8
 
 - PermGen Space，永久代，存活于jdk1.7之前，主要用来存储类信息、常量、静态数据、编译后代码等
 - Meta space，在jdk1.8以后
@@ -556,7 +592,7 @@ JVM默认为每个线程在Eden上开辟一个buffer区域，用来加速对象�
 
 
 
-内存布局
+#### 代码中打印内存布局
 
 ```
 <dependency>
@@ -574,18 +610,12 @@ System.out.println(ClassLayout.parseInstance(new String("ConstXiong")).toPrintab
 
 
 
-
-
-
-
-1M 单个线程默认内存
-
-
+#### 内存溢出
 
 栈溢出：栈帧溢出，线程溢出
 
 - java.lang.StackOverflowError 栈溢出 -Xss128K
-- 
+- 1M 单个线程默认内存
 
 堆溢出：gc频繁（eden区溢出），old区溢出
 
@@ -593,15 +623,9 @@ System.out.println(ClassLayout.parseInstance(new String("ConstXiong")).toPrintab
 
 
 
-智能指针
-
-循环引用
 
 
-
-
-
-堆内存溢出
+#### jvisualvm
 
 jvisualvm.exe 以管理员的身份运行
 
@@ -609,7 +633,7 @@ jvisualvm.exe 以管理员的身份运行
 
 安装插件visualvm gc
 
-堆内存溢出
+案例：堆内存溢出
 
 ![image-20220909164742305](jvm.assets/image-20220909164742305.png)
 
@@ -619,15 +643,9 @@ jvisualvm.exe 以管理员的身份运行
 
 
 
-
-
-
-
-
+#### 对象的声明周期
 
 ![01c7a2f4dd3a4593bca61e1c89fc5d4b](jvm.assets/01c7a2f4dd3a4593bca61e1c89fc5d4b.png)
-
-对象的声明周期
 
 - 正常情况对象的声明周期是个线性的，但是finalize方法可以让对象起死回生，通过重写finalize()方法，把对象引用赋给对象中参数的方法，从而有了可用的引用，实现起死回生，无用的设计！！！
 
@@ -656,13 +674,10 @@ jvisualvm.exe 以管理员的身份运行
 
   
 
-- 
 
 
 
-
-
-引用
+#### 引用
 
 强引用
 
@@ -678,7 +693,7 @@ jvisualvm.exe 以管理员的身份运行
 
 
 
-确定引用计数
+#### 确定引用计数
 
 ![6b6ca2b7d4134992ab0bb380f7e567f8](jvm.assets/6b6ca2b7d4134992ab0bb380f7e567f8.png)
 
@@ -701,13 +716,57 @@ jvisualvm.exe 以管理员的身份运行
 
 
 
+#### 垃圾回收算法
+
+垃圾回收算法
+
+滑动整理算法
+
  
 
+吞吐量 和 停顿时间 取舍
+
+停顿时间：一次gc的时间
+
+吞吐量：单位时间内gc时间的占比：比如业务100s内，gc占1s，吞吐量就是(100-1)/100 = 99%，意思时cpu有百分之99%的时间处理业务，吞吐量越高越好。
+
+频繁垃圾回收：每一次的垃圾回收时间减少，总体时间增大，所以：降低了停顿时间，但降低了吞吐量
+
+反之亦然。
 
 
 
+#### java命令
+
+ java 进程 线程 内存空间 对象占用情况  类加载信息 gc信息
+
+jps
+
+jinfo  jvm参数配置信息
+
+jstack
+
+jmap
 
 
+
+#### 优化
+
+编译时优化
+
+运行时优化
+
+内存优化
+
+
+
+#### 工具
+
+java 官网
+
+jsonsole
+
+jvisualVM
 
 
 

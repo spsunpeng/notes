@@ -570,7 +570,7 @@ public class MyConfig {
 
 ## 1、整合servlet
 
-应该也可以认为时整合springmvc吧
+应该也可以认为是整合springmvc吧
 
 ### 1.1 http
 

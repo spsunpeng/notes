@@ -4,6 +4,8 @@
 
 目前redis已经安装配置完成，可以直接使用
 
+## 1、linux
+
 ```sh
 #已配置守护进程，已配置集群，已配置主从
 #当前ip：10.1.20.122
@@ -21,6 +23,15 @@
 
 ###注意
 #单机与集群在同一个redis中，启动使用后会生成持久化文件，如需在单机和集群间切换，需要删除持久化文件dump.rdb、appendonly.aof
+
+```
+
+## 2、window
+
+```sh
+cd E:\redis\Redis-x64-5.0.9  #redis安装目录
+redis-server.exe #启动服务端
+redis-cli.exe    #启动客户端
 ```
 
 
