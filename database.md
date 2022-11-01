@@ -1,4 +1,4 @@
-# 前言
+# 快速使用
 
 ## 1、启动
 
@@ -15,7 +15,7 @@ systemctl start docker
 docker run -d --name mysql-3307 -p 3307:3306 -e MYSQL_ROOT_PASSWORD=root mysql:5.7
 ```
 
-## 2、mysql
+## 2、sql语句
 
 ```mysql
 -- 用户&权限
@@ -128,6 +128,10 @@ kill [id]
 -- 不等于
 -- mysql中不等于 <>  和 != 都可以表示不等于，不过 <> 在所有的sql语句中都是通用的。
 ```
+
+
+
+
 
 
 
@@ -297,10 +301,6 @@ Read Uncommitted(读取未提交内容)
 
 
 
-
-
-
-
 # 二、Navicat
 
 ## 1、快捷键
@@ -335,6 +335,16 @@ Read Uncommitted(读取未提交内容)
 但是，使用mysql语句插入，会报错，但由于mysql语句时自己当场写的，这个错还很直接，查看mysql语句总会发现。
 
 但是，使用springboot和jpa和mysql框架时：根本找不到错误再哪里？控制台会报sql语句出错，但这样完全不直观，根本想不通sql哪里出错了。
+
+
+
+
+
+
+
+
+
+
 
 
 

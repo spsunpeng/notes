@@ -1,10 +1,6 @@
+# 快速使用
 
-
-# 0、快速使用
-
-目前redis已经安装配置完成，可以直接使用
-
-## 1、linux
+## 1、启动
 
 ```sh
 #已配置守护进程，已配置集群，已配置主从
@@ -26,21 +22,45 @@
 
 ```
 
-## 2、window
-
 ```sh
 cd E:\redis\Redis-x64-5.0.9  #redis安装目录
 redis-server.exe #启动服务端
 redis-cli.exe    #启动客户端
 ```
 
+## 2、命令
+
+```sh
+#===========================================通用====================================
+keys *[key]*   #查询key，模糊匹配
+
+#===========================================string====================================
+get [key]   #查询key，模糊匹配
+set [key] [value]
+ttl [key] #获取过期时间
+
+#===========================================hash======================================
+hgetall [key] #获取所有key-value
+hkeys [key] #获取所有key
+hvals [key] #获取所有value
+
+hget [key] [field] #获取value
+hset [key] [field] [value] #设置key-value
+hdel [key] [field field2 field3 ...] #删除key
+
+#===========================================scan======================================
+redis-cli --scan --pattern *[key]* #scan：遍历；pattern：匹配
+```
 
 
 
 
-# 一、安装
 
-## 1、linux安装
+# 一、redis
+
+## 1、安装
+
+### 1.1 linux安装
 
 ```sh
 ###1.资源
@@ -175,7 +195,7 @@ chmod a+x stop.sh
 
 
 
-# 二、命令
+## 2、命令
 
 ```sh
 #===========================================通用====================================
@@ -205,11 +225,11 @@ redis-cli --scan --pattern *[key]* #scan：遍历；pattern：匹配
 
 
 
-# 三、代码
+## 3、代码
 
-## 1、springBoot整合Redis实例
+### 3.1 springBoot整合Redis实例
 
-### 1、依赖
+#### 3.1.1 依赖
 
 ```xml
 <dependency>
@@ -219,7 +239,7 @@ redis-cli --scan --pattern *[key]* #scan：遍历；pattern：匹配
 </dependency>
 ```
 
-### 2、application
+#### 3.1.2 application
 
 ```yml
 spring:
@@ -229,7 +249,7 @@ spring:
       nodes: 10.1.20.122:7001,10.1.20.122:7002,10.1.20.122:7003,10.1.20.122:7004,10.1.20.122:7005,10.1.20.122:7006 #不配是单子版（默认port为6379），配置为集群
 ```
 
-### 3、RedisConfig
+#### 3.1.3 RedisConfig
 
 ```java
 package com.config;
@@ -266,7 +286,7 @@ public class RedisConfig {
 
 ```
 
-### 4、使用
+#### 3.1.4 使用
 
 ```java
 @RestController
@@ -293,9 +313,11 @@ public class StudentController {
 }
 ```
 
-# 四、Redis持久化策略
 
-## 1、RDB
+
+## 4、Redis持久化策略
+
+### 4.1 RDB
 
 ​	rdb模式是默认模式，可以在指定的时间间隔内生成数据快照（snapshot），默认保存到**dump.rdb**文件中。当redis重启后会自动加载dump.rdb文件中内容到内存中。
 
@@ -311,7 +333,7 @@ public class StudentController {
 　　服务器在300秒之内，对数据库进行了至少10次修改
 　　服务器在60秒之内，对数据库进行了至少10000次修改
 
-## 2、AOF
+### 4.2 AOF
 
 ​	AOF默认是关闭的，需要在配置文件中开启AOF。Redis支持AOF和RDB同时生效，如果同时存在，AOF优先级高于RDB（Redis重新启动时会使用AOF进行数据恢复）
 
@@ -327,9 +349,3 @@ appendfilename "appendonly.aof"
 ```
 
 数据持久化在appendonly.aof中
-
-
-
-
-
-
