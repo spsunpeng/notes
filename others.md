@@ -1,3 +1,126 @@
+# 一、nginx
+
+nginx 2004年 俄罗斯人 2019年被硬件厂商F5收购
+
+
+
+安装
+
+```sh
+#=============================================安装====================================================
+yum install yum-utils
+#配置nginx的下载源
+vim /etc/yum.repos.d/nginx.repo
+<--
+[nginx-stable]
+name=nginx stable repo
+baseurl=http://nginx.org/packages/centos/$releasever/$basearch/
+gpgcheck=1
+enabled=1
+gpgkey=https://nginx.org/keys/nginx_signing.key
+module_hotfixes=true
+[nginx-mainline]
+name=nginx mainline repo
+baseurl=http://nginx.org/packages/mainline/centos/$releasever/$basearch/
+gpgcheck=1
+enabled=0
+gpgkey=https://nginx.org/keys/nginx_signing.key
+module_hotfixes=true
+-->
+yum install nginx
+nginx -v #nginx/1.22.0
+
+
+#=============================================启动====================================================
+cd /usr/sbin
+./nginx #启动
+./nginx -s stop #停止，kill命令也可以停止
+./nginx -s reload #重新加载配置文件
+#验证
+ps -ef | grep nginx 
+curl localhost:80   #虚拟你访问nginx：Welcome to nginx!
+http://10.1.20.236/ #宿主机访问nginx: Welcome to nginx!
+
+
+
+cat /var/run/nginx.pid #查看nginx的pid
+```
+
+
+
+nginx命令位置：/usr/sbin/nginx
+
+nginx配置文件位置：/etc/nginx/nginx.conf
+
+
+
+nginx: [warn] conflicting server name "localhost" on 0.0.0.0:80, ignored
+
+
+
+```conf
+    server{
+        listen    81;
+	server_name    localhost;
+        location / {
+	    proxy_pass http://localhost:8080;
+        }    
+    }
+#    server {
+#	    listen       80;      
+#            listen       443 ssl;
+#            server_name  www.baidu.com;
+#            ssl_certificate      /data/cert/server.crt;
+#            ssl_certificate_key  /data/cert/server.key;
+#     }
+```
+
+
+
+tomcat /usr/share/tomcat/webapps/ROOT
+
+
+
+
+
+负载均衡
+
+```conf
+# server list 
+upstream myServers { 
+    #random two least_conn; #负载均衡算法：随机，默认（不配置）轮询
+    server localhost:8081; 
+    server localhost:8082; 
+}
+server { 
+    listen 9002; 
+    server_name www.cpf.com; 
+    location / { 
+        proxy_pass http://myServers; 
+    } 
+}
+
+```
+
+负载均衡算法
+
+least_conn;
+ip_hash;
+hash $request_uri consistent;
+random two least_conn; #随机
+
+
+
+
+
+
+
+
+
+
+
+# 二、fastdfs
+
 ## 快速使用
 
 ### 1、启动
@@ -90,7 +213,7 @@ service fdfs_storaged start #启动storaged，查询状态：service fdfs_storag
 
 
 
-![](fastdfs.assets/FastDFS+NGINX-03.png)
+![](others.assets/FastDFS+NGINX-03.png)
 
 
 
@@ -220,7 +343,7 @@ vim /etc/fdfs/client.conf #3.4.1 配置文件
 
 ### 4.0 时序图
 
-![](fastdfs.assets/FastDFS+NGINX-06.jpg)
+![](others.assets/FastDFS+NGINX-06.jpg)
 
 #### 4.0.1上传
 
@@ -229,7 +352,7 @@ vim /etc/fdfs/client.conf #3.4.1 配置文件
 3.  客户端直接访问Storage，把文件内容和元数据发送过去。
 4.  Storage返回文件存储id。包含了组名和文件名
 
-![](fastdfs.assets/FastDFS+NGINX-05-1629701751079.jpg)
+![](others.assets/FastDFS+NGINX-05-1629701751079.jpg)
 
 #### 4.0.2 下载
 
@@ -635,7 +758,7 @@ cd /usr/local/nginx/sbin/
 
 修改结果如下：
 
-![](fastdfs.assets/FastDFS+NGINX-09.jpg)
+![](others.assets/FastDFS+NGINX-09.jpg)
 
 -  **注二**
 
@@ -676,27 +799,42 @@ store_path0=/usr/local/fastdfs/storage/store
 
 
 
+# 三、solr
+
+## 1、安装
+
+```sh
+###1.资源
+#本机资源在/usr/local/tmp/solr-7.7.2.tgz中，也可另寻资源
+tar zxf solr-7.7.2.tgz
+cp -r solr-7.7.2 ../solr
+
+###2.安装
+cd /usr/local/solr/bin
+vim solr.in.sh  
+	SOLR_ULIMIT_CHECKS=false	#修改启动参数，否则启动时报警告。提示设置SOLR_ULIMIT_CHECKS=false
+
+###3.启动
+./solr start -force 
+#solr默认不推荐root账户启动，如果是root账户启动需要添加-force参数
+#Solr内嵌Jetty，直接启动即可。监听8983端口
 
 
+###4、使用
+#访问：10.1.20.122:8983
+```
+
+目前只安装了solr，后续有需要再学习
+
+## 2、快速使用
+
+```sh
+###solr使用
+./solr start -force #启动
+#访问：10.1.20.122:8983
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+```
 
 
 

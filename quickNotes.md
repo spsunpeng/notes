@@ -194,7 +194,7 @@ public class myConfig{
 }
 
 @ConfigurationProperties(prefix = "supplier-access.nmyvirtual") //正确
-@ConfigurationProperties(prefix = "supplier-access.nmyVirtual") //错误  
+@ConfigurationProperties(prefix = "supplierAccess.nmyVirtual") //错误  
 ```
 
 ```properties
@@ -219,32 +219,7 @@ supplier-access.nmyvirtual.hobby=women    //必须配置
 
 
 
-#### 3、postman
 
-1.1 切换环境实现不同环境下的测试
-
-- 切换环境达到不同环境
-- 在请求中通过变量{{supplier-access}}达到不同服务
-
-图1：不同环境
-
-![postman不同服务url](quickNotes.assets/postman不同环境.png)
-
-图2：不同服务
-
-![postman不同服务](quickNotes.assets/postman不同服务.png)
-
-图3：不同接口
-
-![postman不同接口](quickNotes.assets/postman不同接口.png)
-
-
-
-#### 4、postman账号密码
-
-账户：476567162@qq.com
-
-密码：sp602157
 
 
 
@@ -487,40 +462,6 @@ com.slodon.bbc.core.aop.WebExceptionHandler //controller日志
 
 
 # 2022-02
-
-### 1、postman
-
-#### 1.1 pre
-
-```js
-const req = {
-  url: 'https://bplusdev.sinosun.com:18180/mallvop/auth/v1/fastGetAccessToken?channelId=1001',
-  method: 'GET'
-};
-
-pm.sendRequest(req, function (err, res) {
-  console.log(err ? err : res.json());
-  var token = res.json().result.accessToken;
-  token = "Bearer "+token;
-  pm.globals.set("token", token);
-});
-```
-
-#### 1.2 test
-
-```sh
-pm.test("Status code is 200", function () {
-    pm.response.to.have.status(200);
-});
-var jsonData = JSON.parse(responseBody)
-pm.environment.set("vop_open_token", "Bearer "+jsonData.result.accessToken);
-```
-
-#### 1.3 图片
-
-![postman上传图片](quickNotes.assets/postman上传图片.png)
-
-
 
 ### 2、static是沟通容器与非容器的桥梁
 

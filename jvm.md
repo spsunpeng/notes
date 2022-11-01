@@ -26,7 +26,8 @@ java com.msb.HelloWord #需要放到包com/msb下，程序才能执行
 
 
 #=================================================jmap=================================================
-jmap -dump:live,format=b,file=/dump.hprof [pid] #生成堆文件
+jmap -dump:format=b,file=/dump.hprof [pid] #生成所有对象的堆文件
+jmap -dump:live,format=b,file=/dump.hprof [pid] #生成存活对象的堆文件，一定会导致gc(既然都标记出来了，不就顺手清理了)
 jmap -heap [pid] #打印堆信息
 
 ```

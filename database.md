@@ -161,8 +161,8 @@ mysql -u root -p
   window：我的电脑 --》管理 --》 服务和应用程序 --》 服务  --》 选中mysql，再点击启动
 
   启动成功：
-  
-  ![](db.assets/mysql启动.png)
+
+  ![](database.assets/mysql启动.png)
 
 
 
@@ -235,7 +235,7 @@ explain select * from t_basedata_dictdata where bd_code = 1010000;
 explain select * from t_basedata_dictdata where bd_type = 2;
 ```
 
-![](db.assets/联合主键索引.png)
+![](database.assets/联合主键索引.png)
 
 
 

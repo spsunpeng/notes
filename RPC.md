@@ -1,34 +1,4 @@
-RPC、http协议：他们也是接口吗，印象中TCP协议是方法。
-
-httpClient 由 java.net提供
-
-文本对象、流对象
-
-基本类型、object、list
-
-@ResponseBody   @RequestBody  utf-8 json
-
-RPC：协议
-
-RMI：帮助实现http
-
-zookeeper： 注册中心
-
-Dubbo：高可用的，基于java的开源RPC框架
-
-
-
-ctrl+alt+win+t  :  try-catch
-
-
-
-# 一、分布式
-
-
-
-
-
-# 二、RPC
+# 一、RPC
 
 ## 1、RPC协议
 
