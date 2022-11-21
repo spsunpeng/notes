@@ -477,6 +477,31 @@ springboot-base.book.name=shuixu
 - @ConfigurationProperties不支持大写字母，支持连字符 - 
 - @Component可以替换为@EnableConfigurationProperties(value = Person.class) ，这样这个注解可以放到任意类上。
 
+
+
+### 2.3 ConfigurationProperties 和 Value
+
+|            | @ConfigurationProperties         | @Value                                       |
+| ---------- | -------------------------------- | -------------------------------------------- |
+| 格式       | prefix中不能有大写字母           | 不限制                                       |
+| yaml格式   | 不限制，且驼峰和连字符都可以映射 | 最好匹配，因为yaml的驼峰映射不上配置的连字符 |
+| yaml为配置 | 不影响                           | 运行时报错                                   |
+
+```java
+//ConfigurationProperties入参prefix中不能出现大写字母，否则会编译错误: Prefix must be in canonical form
+@ConfigurationProperties(prefix = "jdgoods")  //正确
+@ConfigurationProperties(prefix = "jd-goods") //正确
+@ConfigurationProperties(prefix = "jdGoods") //错误
+
+//value中yaml的驼峰映射不上配置的连字符，否则@Value没有默认只，运行时会报错
+@Value("${goods.goods-number}") //正确
+goods.goodsNumber=10
+```
+
+
+
+
+
 ## 3、DI 依赖注入
 
 ```java
@@ -563,6 +588,11 @@ public class MyConfig {
 ## 7、bean_泛型
 
 见spring-三-4
+
+## 8、static
+
+- static 与 bean 不兼容，建议不要在bean中使用static 
+- static是沟通容器与非容器的桥梁
 
 
 

@@ -44,22 +44,7 @@ C语言在多个操作系统执行的方式
 
 - Linux：gcc/g++，需要编写makfefile文件
 
-
-
-### 4. 终端命令
-
-| linux    | win/doc命令                                           |
-| -------- | ----------------------------------------------------- |
-| 无       | 切换盘符，直接输入盘符，如：D:  d:  C:  c:            |
-| cd       | C:/User 不能直接进入 D:/git，必须切换盘符，再切换目录 |
-| ls       | dir                                                   |
-| clear    | cls                                                   |
-| mkdir    | md                                                    |
-| rm -r    | rd                                                    |
-| 复制文件 | copy                                                  |
-| rm       | del                                                   |
-
-
+  
 
 ### 5. 一个文件中多个类
 
@@ -176,16 +161,37 @@ s.chatAt(pos) //查：根据位置查值
 s.indesOf(values) //查：根据值查询位置，没有返回-1
 	
 //判断相等
-equalsIgnoreCase() //通过内容且忽视大小写
+equalsIgnoreCase(); //通过内容且忽视大小写
+    
 //字符串分割: split
 String s = "hello world sun peng";
 String[] strs = s.split(" ");
+str.split("\\.");  //当字符串以"."作为分隔符时，split方法会认为"."是正则表达式，需要转义再转义，eg:
 	
 //可变字符串StringBuffer
 s.append("")  //增
 s.insert(pos, 任意类型值)   //插入
 delete(leftPos, rightPos) //删：从left删到right,左闭右开
 ```
+
+#### 2.1 lang3.StringUtils
+
+```java
+import org.apache.commons.lang.StringUtils;
+
+boolean StringUtils.isEmpty(String str); //str为 null 或 “” 为空
+boolean StringUtils.isBlank(String str);  //str为 null 或 “”  或 “ ” 或 “   ” 或  “\n” 或 ” 或 "\t“ 都为空
+```
+
+#### 2.2 stringbuffer & stringbuilder
+
+stringbuffer是线程安全的
+
+stringbuilder 速度快
+
+
+
+
 
 ### 3、IO
 
@@ -379,6 +385,16 @@ public class GlobalExceptionHandler {
 
 
 
+### 5、多模块项目
+
+#### 5.1 删除module
+
+先移除再删除
+
+
+
+
+
 # 四、面向对象
 
 **类的组成：属性，方法，构造器，代码块，内部类**
@@ -468,6 +484,41 @@ public class GlobalExceptionHandler {
 - 一般将覆盖关系的基类成员方法都声明为抽象类。
 
 - 抽象类不能构造对象：Base()，它构造对象以经没有意义了，只是作为一个抽象的祖先概念，构造出的实体对象对现今而言没有意义。所以，一般它只用在多态中：Base b = Deriver()；
+
+#### 3.4 继承类型转换
+
+```java
+Parent parent = new Parent();
+Son son = new Son();
+
+// 子类继承父类，子类包含的信息比父类多。
+// 父类可以指向子类，子类不能指向父类，这样使用基类方法一定不会出错
+// 强制转换只有在地址本身就是此类型，不关心指针的类型
+
+parent = son; //正确：子类可以指向父类
+son = parent; //编译错误：语法错误
+son = (Son)parent; // 运行错误：ClassCastException
+
+Parent falseParent = new Son(); 
+son = (Son)falseParent; //正确的：多态的用法，falseParent本质是Son，所以可以强制转换。
+son = (Son)(new Son()) //等价于
+
+//示例
+public GetTownResponse getTown(String districtCode) {
+    return (GetTownResponse)this.getChildRegion(districtCode, new GetTownResponse());
+}
+private RegionListVo getChildRegion(String parentCode, RegionListVo regionListVo){
+    List<Region> regionList = regionRepository.findByParentCode(parentCode);
+    List<RegionVo> regionVoList = BeanCopyUtil.copyListProperties(regionList, RegionVo::new);
+    regionListVo.setRegionVoList(regionVoList);
+    return regionListVo;
+}
+```
+
+
+### 
+
+
 
 
 
@@ -808,6 +859,17 @@ Base b = new Derive();
   - 继承Exception：自定义异常都是可以遇见的，按理说继承Exception比较好，但这么做，系统会充斥这大量的try-catch，逻辑混乱且没有代码复用性。
   - 继承RuntimeException：只需要throw即可，但是自定义异常都是需要处理的，不然把它定义出来干什么。
   - 解决方法：自定义异常继承RuntimeException，自定义异常继承实现框架异常处理接口，如此实现了统一处理，并且此方法也会同时处理RuntimeException。
+
+
+
+#### 1.5 总结
+
+- ClassNotfoundException 编译时找不到类（常见）
+  - 注入时的，找不到配置，找不到配置等等。
+
+- NoClassDefFoundError 运行时找不到类（不常见）
+  - 一种情况就是因为静态变量加载不到原因
+  - 工程里没有将jar添加到classpath，maven项目的，需要根据项目情况排查
 
 
 
@@ -1183,13 +1245,13 @@ jar -tf filename.jar
 
 
 
-# 七、maven/gradle/groovy
+# 七、maven & gradle
 
-#### 1、IDEA自带maven的settings.xml
+## 1、IDEA自带maven的settings.xml
 
 IDEA自带maven的settings.xml文件的位置：D:\IntelliJ IDEA 2018.3.6\plugins\maven\lib\maven3\conf
 
-#### 2、 maven
+## 2、 maven
 
 - maven 程序、配置文件(setting.xml)、仓库(repository) 互不相关
 - maven 配置环境变量，但不知道是不是一定要配置
@@ -1199,9 +1261,27 @@ IDEA自带maven的settings.xml文件的位置：D:\IntelliJ IDEA 2018.3.6\plugin
   - JAR工程：常用于本地工程的调用
   - WAR工程：发布到服务器上的工程
 
-#### 3、gradle
 
-##### 3.1 下载
+
+### 2.1 标签
+
+#### 2.1.1 dependencyManagement
+
+- parent
+
+- 多个parent：dependencyManagement，
+
+  g2自定义parent，还要用spring-boot-parent，spring-cloud-parent
+
+- springboot的版本管理是：spring-boot-dependencies
+
+
+
+
+
+## 3、gradle
+
+### 3.1 下载
 
 地址：https://services.gradle.org/distributions/  -> gradle-4.5-bin.zip
 
@@ -1211,7 +1291,7 @@ IDEA自带maven的settings.xml文件的位置：D:\IntelliJ IDEA 2018.3.6\plugin
 
 - gradle-x.x-all.zip   全部文件(发行版+源码)
 
-##### 3.2 环境配置
+### 3.2 环境配置
 
 我的电脑-属性- 高级系统设置-环境变量
 
@@ -1219,7 +1299,7 @@ IDEA自带maven的settings.xml文件的位置：D:\IntelliJ IDEA 2018.3.6\plugin
 
 （2）path -> 编辑 -》 新建 -》{%GRADLE_HOME%\bin}
 
-##### 3.3 测试
+### 3.3 测试
 
 命令提示行
 
@@ -1229,13 +1309,13 @@ IDEA自带maven的settings.xml文件的位置：D:\IntelliJ IDEA 2018.3.6\plugin
 
 
 
-#### 4、groovy语言
+## 4、groovy语言
 
-##### 4.1 没有类也没有main
+### 4.1 没有类也没有main
 
 代码直接写直接执行
 
-##### 4.2 换行已换行符做标志
+### 4.2 换行已换行符做标志
 
 groovy句末不需要“;”,估计是以换行符作为结尾标志。那么长语句需要换行是时就需要注意。
 
@@ -1245,13 +1325,13 @@ println("hello grovvy")
 println"hello grovvy" //甚至不需要”()“
 ```
 
-##### 4.3 集合的添删查改
+### 4.3 集合的添删查改
 
 ```groovy
 list<<'c' //增
 ```
 
-##### 4.4 groovy是弱类型语言
+### 4.4 groovy是弱类型语言
 
 def i =18 
 
@@ -1261,7 +1341,7 @@ def list = ['a','b']
 
 def map = ['key1':'value1','key2':'value2']
 
-##### 4.5 函数名与函数指针类型
+### 4.5 函数名与函数指针类型
 
 - 函数指针：作用是当作变量传入使用
 

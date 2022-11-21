@@ -18,7 +18,7 @@ docker run -d --name mysql-3307 -p 3307:3306 -e MYSQL_ROOT_PASSWORD=root mysql:5
 ## 2、sql语句
 
 ```mysql
--- 用户&权限
+-- ==========================================用户&权限====================================
 #1.查询
 SELECT user,host FROM mysql.user; #查询所有用户
 SELECT * FROM mysql.user WHERE user='root'\G #查询具体用户
@@ -31,52 +31,60 @@ drop user 'username'@'host';   #删
 UPDATE mysql.user SET user.Host='%' where user.User='root'; # %表示任意主机，不然只有本地主机可以连接
 FLUSH PRIVILEGES;
 
--- 数据库
+
+-- ===========================================数据库=====================================
 show databases; #查
 create database [new-databaseName];
 drop database [databaseName];
 use databasesName; 
 
--- 表
+
+-- ============================================表=======================================
 create table tableName(属性名 类型 [约束] [备注]，==== ，====); #创建表和表的属性
 drop table tableName;
 alter table tableName1 rename tableName2;
 show tables;
 show create table [tableName]; #查
 
--- columns
+
+-- ==========================================columns=====================================
 alter table [tableName] add column [columnName] varchar(10) comment ['注释'];#增
 alter le [tableName] drop column [columnName]; #删
 show columns from [tableName]; #查
 
 
--- 数据
+-- ===========================================数据==========================================
 insert into tableName(,,) values(,,),(,,);
 insert into tableName set id=3,name="sunpeng";
 delete from tableName where id>2;
 select * from tableName;
 update tableName set name="sunyue" where id=1;
 
--- 索引
+
+-- ==========================================索引==============================================
 create INDEX [index_name] ON table_name (column1, column2, column3); #增
 alter table table_name add index [index_name] (column1, column2, column3); #增
 alter table table_name add unique (column1, column2, column3); #增
 alter table table_name drop index index_name; #删
 
--- count
+
+-- =========================================count==============================================
 select count(*) from [tableName]; #统计个数
 select count([columnName]) from [tableName]; #统计个数,columnName=null不计入统计
 select [columnName], count([columnName]) from [tableName] group by [columnName]; #按columnName分组并并统计
 
--- as
+
+-- ===========================================as==============================================
 #别名：可以用于表名，也可以用于字段名，起完别名后就不允许用原名了
 select * from [tableName] as [other-tableName] where [other-tableName].id<5;
 
--- in
+
+-- ===========================================in====================================================
 select * from student where age IN (select age from student where score>60) 在score>60
 select * from student where age IN(20,21,22)
 
--- join 连接（多表查询）
+
+-- ========================================join 连接（多表查询）===========================================
 -- 内连接
 select *  from  [表A] a  inner  join  [表B] b  on  a.key = b.key;
 -- 左连接/左外连接
@@ -109,23 +117,24 @@ INSERT INTO `t_system_system_resource`(`pid`, `url`, `content`, `create_time`, `
 INSERT INTO `t_system_system_resource_role`(`resource_id`, `role_id`, `create_time`) VALUES ((SELECT MAX(resource_id) FROM t_system_system_resource), 1, NOW());
 
 
--- explain 解释(是否命中索引)
+-- =================================explain 解释(是否命中索引)==============================================
 explain select * from t_basedata_dictdata where bd_code = 1010000 and bd_type = 2;
 
 
--- LIMIT 分页
+-- ======================================LIMIT 分页======================================================
 select * from table_name LIMIT [pageNum], [pageSize];
 -- 参数：pageNum表示从第几条（与java.page不一样：第几页），pageSize表示查询几条，
 -- 当数据库过大，第一个参数越大查询越慢，需要注意。
 
 
+-- =========================================进程======================================================
 -- 展示正在运行的sql
 show processlist
 -- 强制停止
 kill [id]
 
 
--- 不等于
+-- =========================================不等于==================================================
 -- mysql中不等于 <>  和 != 都可以表示不等于，不过 <> 在所有的sql语句中都是通用的。
 ```
 

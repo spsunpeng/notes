@@ -3,26 +3,23 @@
 ## 1、启动
 
 ```sh
-#已配置守护进程，已配置集群，已配置主从
-#当前ip：10.1.20.122
+#============================linxu单机======================================
+cd /usr/local/redis/bin
+./redis-server #启动server
+./redis-cli #启动client
+.redis-cli -p 7006 shutdown #关闭server
+#注意：单机与集群在同一个redis中，启动使用后会生成持久化文件，如需在单机和集群间切换，需要删除持久化文件dump.rdb、appendonly.aof
 
-###单机
-/usr/local/redis/bin/redis-server #启动server
-/usr/local/redis/bin/redis-cli #启动client
-/usr/local/redis/bin/redis-cli -p 7006 shutdown #关闭server
-
-###集群
+#=============================linux集群=========================================
+#已配置守护进程，已配置集群，已配置主从, 当前ip：10.1.20.122
 #集群port: 7001、7002、7003、7004、7005、7006，形成一主一从三节点集群
-/usr/local/redis/bin/startup.sh #启动server
-/usr/local/redis/bin/redis-cli -p 7001 -c #启动client
-/usr/local/redis/bin/stop.sh #关闭server
+cd /usr/local/redis/bin
+./tartup.sh             #启动server
+./redis-cli -p 7001 -c  #启动client
+./stop.sh               #关闭server
+#注意：单机与集群在同一个redis中，启动使用后会生成持久化文件，如需在单机和集群间切换，需要删除持久化文件dump.rdb、appendonly.aof
 
-###注意
-#单机与集群在同一个redis中，启动使用后会生成持久化文件，如需在单机和集群间切换，需要删除持久化文件dump.rdb、appendonly.aof
-
-```
-
-```sh
+#=============================window单机=========================================
 cd E:\redis\Redis-x64-5.0.9  #redis安装目录
 redis-server.exe #启动服务端
 redis-cli.exe    #启动客户端
@@ -31,15 +28,16 @@ redis-cli.exe    #启动客户端
 ## 2、命令
 
 ```sh
-#===========================================通用====================================
-keys *[key]*   #查询key，模糊匹配
+#=============================================通用===========================================
+keys "*[key]*"   #查询key，模糊匹配
+redis-cli  cluster nodes  #查询节点信息
 
-#===========================================string====================================
+#=============================================string=========================================
 get [key]   #查询key，模糊匹配
 set [key] [value]
 ttl [key] #获取过期时间
 
-#===========================================hash======================================
+#==============================================hash==========================================
 hgetall [key] #获取所有key-value
 hkeys [key] #获取所有key
 hvals [key] #获取所有value
@@ -48,8 +46,30 @@ hget [key] [field] #获取value
 hset [key] [field] [value] #设置key-value
 hdel [key] [field field2 field3 ...] #删除key
 
-#===========================================scan======================================
-redis-cli --scan --pattern *[key]* #scan：遍历；pattern：匹配
+
+#=========================================== 集群&keys ==========================================
+#1.redis-cli内部命令（集群环境下无法模糊操作）
+redis-cli -c
+127.0.0.1:6379> keys "*[key]*"
+
+#2.redis-cli命令（集群环境下可以模糊查询，但无法模糊删除）
+redis-cli --scan --pattern "*[key]*" #主从节点，结果：key:vale
+redis-cli --cluster call [ip:port] keys "*[key]*" #全部（任意一个节点ip:port即可）结果：port:key:value
+redis-cli -h [ip] keys "*[key]*" #主从节点，结果：key
+redis-cli -h [ip] keys | xargs redis-cli -h [ip] del #是否可以遍历容器删除，不可以，删除时主从之间跨槽
+
+#3.shell命令（集群环境下模糊删除）
+#将所有key查询出来，记录到文件中，用 redis-cli del [key] 命令一个一个删除，这样就不会跨槽了
+redis-cli -h 127.0.0.1 -p 6379 -a 密码 cluster nodes | grep master | awk '{print $2}' | awk -F ':' '{print " -h " $1 " -p " $2}' > redis_object_port.info
+more redis_object_port.info | while read object; do redis-cli $object -a 密码 keys mallvopdev_product::detail*; done > result.txt
+sed -i 's/^/del &/' result.txt
+cat result.txt|redis-cli -c -a 密码
+rm -f redis_object_port.info
+rm -f result.txt
+
+#4.以redis客户端方式：可以（如Another Redis Desktop Manager）
+
+#5.以java代码的方式：可以
 ```
 
 

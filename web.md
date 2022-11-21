@@ -1643,6 +1643,25 @@ public class RequestController {
 }
 ```
 
+### 2.1 header
+
+以获取token举例
+
+```java
+//入参 三种方式
+@RequestHeader HttpHeaders headers
+@RequestHeader MultiValueMap<String, String> headers
+@RequestHeader String authorization
+
+//取
+String[] tokens = headers.get("token")
+String token = header.getFirst("token")
+```
+
+
+
+
+
 ## 3、response
 
 ```java
@@ -2011,6 +2030,28 @@ public class GlobalException3 implements HandlerExceptionResolver {
 
 
 
+
+# 四、其他
+
+## 1、注解
+
+- javax
+  - @Valid 对象不能为空 
+  - @NotNull(massage="")		不能为 null
+  - @NotEmpty(massage="")    字符串不能为 null/""
+  - @NotBlank(massage="")     字符串不能为 null/""/空格/转移字符  
+  - @Size(min=1, massage="")  数组最小为1  
+
+- spring
+  - @Valided
+  - @RequestBody
+  - @RequsetParam
+
+- swagger
+  - @ApiModelProperty(require = true)
+
+- serviceComb
+  - @ApiParam
 
 
 

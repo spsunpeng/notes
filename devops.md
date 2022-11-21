@@ -28,12 +28,15 @@ yum [options] [command] [package ...]
 wegt [url] #下载
 tar -zxf [.tar压缩包] #解压
 
+#===========================================系统监控================================================
+top #查看状态信息：top(基本)，task(线程)，cpu，mem(内存)，swap(交换分区，虚拟内存)
 
-#============================================进程==================================================
+#进程
 ps -ef | grep [keyword]  #查看进程
 kill [pid] #根据pid杀死进程
-jmap -heap pid   #查询堆内存
 
+#内存
+free -m    
 
 
 #============================================网络====================================================
@@ -107,6 +110,8 @@ systemctl start nfs.service #master
 systemctl start rpcbind.service #master
 #rinetd：端口转发
 netstat -tulpn | grep rinetd #查看映射，具体产看看三.2
+
+#图形化界面dashboard http://10.1.20.235:32000/
 ```
 
 
@@ -125,9 +130,9 @@ netstat -tulpn | grep rinetd #查看映射，具体产看看三.2
 
 
 
-### 1.1 Centos
+### 1.1 centos
 
-#### 1.1.1 Centos安装
+#### 1.1.1 安装
 
 - 新建虚拟机
   - 选择系统安装位置，系统类型，系统版本：red hat(64-bit)
@@ -288,7 +293,7 @@ speedtest.py #任意位置执行
 
 
 
-### 1.2、XShell
+### 1.2 XShell
 
 #### 1.2.1 突出显示
 
@@ -331,14 +336,14 @@ yum install java-1.8.0-openjdk* -y #yum安装方法会自动配置环境变量
 
 ### 2.1 查看文件
 
-| 命令 | 解释                   | 常用                    | 解释             |
+| 命令 | 解释                   | 常用                    | 补充             |
 | ---- | ---------------------- | ----------------------- | ---------------- |
 | cat  | 从第一行开始显示       | **cat filename**        | -n可以显示行号   |
 | tac  | 从最后一行开始显示     |                         |                  |
 | more | 一页一页的显示档案内容 |                         | d：向前翻页      |
 | less | 相比more，可以翻页     | shift+g 移动到最后一行  | b：向后翻页      |
-| head | 只看头几行             | head-n 20 filename      | 头10页，默认为10 |
-| tail | 只看尾巴几行           | **tail -n 20 filename** | 尾10页，默认为10 |
+| head | 只看头几行             | head-n 20 filename      | 头20页，默认为10 |
+| tail | 只看尾巴几行           | **tail -n 20 filename** | 尾20页，默认为10 |
 
 ### 2.2 cat
 
@@ -362,9 +367,23 @@ yum install java-1.8.0-openjdk* -y #yum安装方法会自动配置环境变量
 
 refreshSkuInfo
 
+### 2.3 vi & vim
+
+1）上下翻动：向上箭头、向下箭头：每次滚动一条日志，这条日这可能占据多行
+
+2）前后翻页：ctrl+f、ctrl+b：f就是forword，b就是backward
+
+3）首行末行：首行（gg），末行（shift+g）
+
+4）查找：?string：查找字符串，N向前，n向后
+
+5）分页分屏：k8s中的vi也支持分页/分屏操作
+
+6) 全局替换：:%s/[from]/[to]/g
 
 
-### 2.3 grep
+
+### 2.4 grep
 
 ```sh
 grep  "[关键字]" [filename] -[参数] --color=auto
@@ -380,19 +399,12 @@ grep "word" log -r                       #进入目录
 
 
 
-### 2.4 vi
+### 2.5 chmod
 
-1）上下翻动：向上箭头、向下箭头：每次滚动一条日志，这条日这可能占据多行
-
-2）前后翻页：ctrl+f、ctrl+b：f就是forword，b就是backward
-
-3）首行末行：首行（gg），末行（shift+g）
-
-4）查找：?string：查找字符串，N向前，n向后
-
-5）分页分屏：k8s中的vi也支持分页/分屏操作
-
-6) 全局替换：:%s/[from]/[to]/g
+```sh
+chmod -777 [file] #全部权限
+chmod a+x [file]  #执行权限
+```
 
 
 
@@ -468,7 +480,9 @@ nmcli connection down ens33 #停用网卡ens33
 
 
 
-## 4、进程
+## 4、监控
+
+### 4.1 ps & kill
 
 ```sh
 #查询所有进程
@@ -486,6 +500,82 @@ kill -9 [pid] #通过信号的方式杀死进程
 #kill杀死不了守护进程，会有其他信号不断重启守护进程，一般守护进程都带d，如mysqld
 
 ```
+
+### 4.2 top
+
+```sh
+top        #显示系统状态，每3s刷新一次
+top -d 10  #显示系统状态，每10s刷新一次
+```
+
+![image-20221110161246309](devops.assets/image-20221110161246309.png)
+
+结果分析：
+
+- top 基本信息
+  - 15:58:24  当前时间
+  - up 8 days,  2:37,   运行时间
+  - 1 user  使用者
+  -  load average: 1.37, 1.47, 1.33   系统在1分钟，5分钟，15分钟的平均负载，小于1健康，大于1超出负荷
+
+- Tasks: 268 total   进程   
+  - 4 running   正在运行的进程
+  - 264 sleeping  睡眠的进程
+  - 0 stopped  结束的进程
+  - 0 zombie  僵尸进程
+
+- %Cpu(s)   cpu占用率
+  - 18.3 us  用户cpu使用率
+  - 3.2 sy  系统cpu使用率
+  - 0.0 ni,
+  - 78.0 id  空闲cpu
+  - 0.3 wa  IO百分比
+  - 0.0 hi,  
+  - 0.2 si,  
+  - 0.0 st
+- KiB Mem :  内存(单位kb)
+  - 8009172 total,   全部内存
+  - 363144 free,  空闲内存
+  - 4901268 used,   已使用内存
+  - 2744760 buff/cache
+- KiB Swap:   交换分区，虚拟内存     
+  - 0 total,        
+  - 0 free,        
+  - 0 used.  
+  - 2718820 avail Mem 
+
+
+
+
+
+## 5、window
+
+```sh
+#=============================================进程===========================================
+netstat -aon|findstr "port"   #通过端口号查看PID
+tasklist|findstr [PID]        #通过PID查看信息
+taskkill /T /F /PID [PID]     #通过PID杀死进程
+#任务管理器方式：任务管理器：win10【详细信息】、win7【进程，如果没有PID字段，则查看->选择列->勾选PID】
+
+#杀死8080端口的进程
+netstat -ano | findstr 8080 
+taskkill /F /PID [pid]
+```
+
+
+
+| linux  | win/doc命令                                                |
+| ------ | ---------------------------------------------------------- |
+| 根目录 | 盘符，切换盘符：D:  d:  C:  c:，不通盘符下不能直接切换目录 |
+| cd     | cd  不通盘符下不能直接切换目录，必须先切换盘符，再切换目录 |
+| ls     | dir                                                        |
+| clear  | cls                                                        |
+| mkdir  | md                                                         |
+| rm -r  | rd                                                         |
+| cp     | copy                                                       |
+| rm     | del                                                        |
+
+
 
 
 
@@ -669,8 +759,9 @@ services:
 ```sh
 cd /usr/local/demo/bsbdj
 docker-compose up -d #运行
-docker-compose logs [docker-id|docker-name] #查看日志
+docker-compose logs -f [id|name] #查看日志,不断滚动
 docker-compose down #下线
+dokcer-compose restart #重启
 ```
 
 
@@ -878,7 +969,35 @@ kubectl create -f [yml]
 
 ```
 
+
+
 ## 3、deploy-部署
+
+### 3.1 pod
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-cpu-limits
+  labels:
+    app: test
+    tier: frontend
+spec:
+  containers:
+  - name: myapp
+    image: ikubernetes/stress-ng
+    command: ["/usr/bin/stress-ng","-c 1","--metrics-brief"]
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+```
+
+### 3.2 deployment
 
 ```yaml
 #基本
@@ -907,27 +1026,7 @@ spec:
             memory: "1024Mi"
 ```
 
-```
-apiVersion: v1
-kind: Pod
-metadata:
-  name: pod-cpu-limits
-  labels:
-    app: test
-    tier: frontend
-spec:
-  containers:
-  - name: myapp
-    image: ikubernetes/stress-ng
-    command: ["/usr/bin/stress-ng","-c 1","--metrics-brief"]
-    resources:
-      requests:
-        cpu: "500m"
-        memory: "512Mi"
-      limits:
-        cpu: "500m"
-        memory: "512Mi"
-```
+
 
 ## 4、service-网络
 
@@ -1316,47 +1415,9 @@ data:
 
 
 
-# 四、jenkins
+# 四、公司k8s
 
-
-
-
-
-# 五、devops
-
-redirect_urls
-
-https://bplusdev.sinosun.com:18580/auth/realms/master/protocol/openid-connect/3p-cookies/step1.html?version=iqfmg
-
-http://10.1.20.220:31121/realms/master/protocol/openid-connect/auth?client_id=security-admin-console&redirect_uri=http://10.1.20.220:31121/admin/master/console/&state=7b766a4d-c4e1-4664-9159-81eb520ae6b7&response_mode=fragment&response_type=code&scope=openid&nonce=0b30b0a1-44b4-43e7-a3b3-682abf0cdc0d&code_challenge=Dos_BbmUuyrrFZOYcp2BdRq_FnA00GeAIl-1Cm7j4Gg&code_challenge_method=S256
-
-
-
- 
-
-https://bplussit.sinosun.com:18680/auth/realms/bplussit/protocol/openid-connect/auth?client_id=security-admin-console&redirect_uri=https%3A%2F%2Fbplussit.sinosun.com%3A18680%2Fauth%2Fadmin%2Fbplussit%2Fconsole%2F%23%2Frealms%2Fbplussit&state=614a4d41-397b-4e76-8730-bdd1e098816f&response_mode=fragment&response_type=code&scope=openid&nonce=bdde0a7d-647d-4c37-b94c-8cfd1d38a014&code_challenge=Mfg0XGjbfXIba88saPuCyik8H7itoWkQSBeenmFNO8g&code_challenge_method=S256
-
-
-
-jenkins
-
-springboot源码
-
-nigx web
-
-springcloud-alibaba
-
-jvm 多线程
-
-算法
-
-
-
-
-
-# 六、公司k8s
-
-1、容器
+## 1、容器
 
 ![image-20220617142835193](devops.assets/image-20220617142835193.png)
 
@@ -1369,6 +1430,824 @@ jvm 多线程
 - lib: jar包，服务打成的jar包
 
 - log: 日志：存储方式hostPath
+
+
+
+
+
+# 五、devops
+
+### 1.1 gitlab
+
+```sh
+#前置准备
+docker version  #docker已安装
+docker-compose version  #docker-compose已安装
+systemctl status docker #docker已启动
+systemctl status firewall #防火墙已关闭
+
+#安装镜像：安装gitlab最新版本
+docker pull gitlab/gitlab-ce
+docker images #查看安装的镜像
+
+#启动容器
+cd /usr/local/gitlab
+vim docker-compose.yml #文件见下文
+docker-compose up -d #启动
+docker logs -f #查看日志
+#启动失败情况：1）内存不够； 2）docker-compose.yml文件内容有问题
+
+#测试
+#浏览器 http://10.1.20.235:8929
+#username:root
+#password:容器中获取
+	docker exec -it gitlab bash
+	cat /etc/gitlab/initial_root_password
+#重置密码：sp610527
+```
+
+
+
+docker-compose.yml（external_url是宿主机ip）
+
+```yaml
+version: '3.1'
+services:
+  gitlab:
+    image: 'gitlab/gitlab-ce:latest'
+    container_name: gitlab
+    restart: always
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://10.1.20.235:8929'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2224
+    ports:
+      - '8929:8929'
+      - '2224:2224'
+    volumes:
+      - './config:/etc/gitlab'
+      - './logs:/var/log/gitlab'
+      - './data:/var/opt/gitlab'
+```
+
+
+
+### 1.2  jdk
+
+```sh
+#安装
+java -version #查看是否安装（也可能未配置环境变量）
+yum install java-1.8.0-openjdk* -y #yum安装方法会自动配置环境变量
+#默认安装位置 /usr/lib/jvm
+```
+
+
+
+### 1.3 maven
+
+```sh
+#资源
+#官网下载（下载tar.gz文件） https://maven.apache.org/
+cd /usr/local
+tar -zxvf [.tar.gz]
+cd /usr/local/maven/config
+vim settings.xml #修改内容见下文
+```
+
+setting.xml
+
+```xml
+<!--新增阿里云镜像-->
+<mirror>
+    <id>aliyunmaven</id>
+    <mirrorOf>*</mirrorOf>
+    <name>阿里云公共仓库</name>
+    <url>https://maven.aliyun.com/repository/public</url>
+</mirror>
+
+<!--修改jdk编译版本，默认是1.4，改为1.8-->
+<profile>
+    <id>jdk18</id>
+    <activation>
+        <activeByDefault>true</activeByDefault>
+        <jdk>1.8</jdk>
+    </activation>
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>
+    </properties>
+</profile>
+```
+
+
+
+### 1.4 docker
+
+
+
+### 1.5 jenkins
+
+#### 1.5.1 安装
+
+integrate工具
+
+持续集成，持续部署 cicd
+
+```sh
+#拉去镜像 lts时稳定版
+docker pull jenkins/jenkins:2.361.2-lts
+
+#启动
+cd /usr/local/docker/jenkins_docker
+vim docker_compose.yaml #见下文
+chmod -R a+w data/
+docker-compose up -d
+
+#登录
+#10.1.20.235:8080
+#密码
+docker exec -it jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+
+#下载插件前配置镜像源
+vim data/hudson.model.UpdateCenter.xml #见下文
+#下载插件
+
+#新建用户
+root:root
+```
+
+- docker_compose.yaml
+
+```yaml
+version: "3.1"
+services:
+  jenkins:
+    image: jenkins/jenkins
+    container_name: jenkins
+    ports:
+      - 8080:8080
+      - 50000:50000
+    volumes:
+      - ./data/:/var/jenkins_home/
+```
+
+- hudson.model.UpdateCenter.xml
+
+```xml
+<?xml version='1.1' encoding='UTF-8'?>
+<sites>
+  <site>
+    <id>default</id>
+    <url>http://mirror.esuni.jp/jenkins/updates/update-center.json</url>
+  </site>
+</sites>
+<!--清华大学的插件源也可以https://mirrors.tuna.tsinghua.edu.cn/jenkins/updates/update-center.json-->
+```
+
+
+
+#### 1.5.2 配置插件
+
+dasgboard -> Manage jenkins
+
+![image-20221102192249689](devops.assets/image-20221102192249689.png)
+
+- 插件管理 -> 下载插件 -> Git Parameter 和 publish over ssh
+
+![image-20221102192519025](devops.assets/image-20221102192519025.png)
+
+![image-20221102192613427](devops.assets/image-20221102192613427.png)
+
+
+
+- 全局配置：jdk 和 maven
+
+![image-20221102193429506](devops.assets/image-20221102193429506.png)
+
+
+
+![image-20221102193448991](devops.assets/image-20221102193448991.png)
+
+
+
+- 系统配置：ssh(从远程拉取文件，代码)
+
+  配置完后点击：test configuration 测试链接通过
+
+![image-20221102193547814](devops.assets/image-20221102193547814.png)
+
+
+
+
+
+
+
+https://maven.apache.org/
+
+https://hub.daocloud.io/
+
+
+
+#### 1.5.3 本地开发并推到gitlab
+
+gitlab 创建项目
+
+设置本地git的用户名和邮箱（已有的不用重复设置）
+
+创建本地项目并初始化git
+
+推到本地仓库，注意添加 .gitgnore 文件
+
+推到远程仓库，第一次退需要设置远程仓库地址，使用http的方式，用户名密码：root:sp610527
+
+![image-20221103095204709](devops.assets/image-20221103095204709.png)
+
+
+
+
+
+#### 1.5.4 构建
+
+参数
+
+![image-20221103175219441](devops.assets/image-20221103175219441.png)
+
+源码管理
+
+![image-20221103175233090](devops.assets/image-20221103175233090.png)
+
+构建
+
+![image-20221103175356926](devops.assets/image-20221103175356926.png)
+
+构建后操作
+
+![image-20221103175433195](devops.assets/image-20221103175433195.png)
+
+
+
+maven
+
+```xml
+    <build>
+        <finalName>springboottest</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+```
+
+Dockerfile
+
+```dockerfile
+FROM daocloud.io/library/java:8u40-jdk
+COPY springboottest.jar /usr/local/
+WORKDIR /usr/local/
+CMD java -jar springboottest.jar
+```
+
+docker.compose.yaml
+
+```yaml
+version: '3.1'
+services:
+  springboottest:
+    build: ./
+    image: springboottest:v1.0
+    container_name: springboottest
+    ports:
+      - 8081:8080
+```
+
+jenkins
+
+```sh
+cd /usr/local/test/docker
+mv ../target/springboottest.jar ./
+docker-compose down
+docker-compose up -d --build  #--build不使用缓存
+docker image prune -f  #相同的镜像新的会覆盖老的，老的变成none，此命令就是删除所有的none
+```
+
+
+
+### 1.6 Harbor
+
+**Harbor是镜像(私有)仓库，它解决了不同环境部署时需要重复制作镜像。比如，兆日pro环境用的就是uat环境的镜像。**
+
+>  Docker官方提供了Registry镜像仓库，但是Registry的功能相对简陋。Harbor是VMware公司提供的一款镜像仓库，提供了权限控制、分布式发布、强大的安全扫描与审查机制等功能
+
+将jenkins构建步骤修改为：
+
+- 同样，从gitlab拉取，maven构建
+- jenkins构建镜像，并上传到harbor（jenkins构建镜像的方式仍然是使用宿主机的docker，不会在jenkins中安装docker）
+- docker从harbor拉取镜像，并启动
+
+
+
+
+
+
+
+#### 1.6.1 harbor安装和使用
+
+```sh
+#=====================================================资源=====================================================
+#下载：https://github.com/goharbor/harbor/releases/download/v2.3.4/harbor-offline-installer-v2.3.4.tgz
+tar -zxvf harbor-offline-installer-v2.3.4.tgz -C /usr/local/
+
+#=====================================================配置=====================================================
+cd /usr/local/harbor/
+cp harbor.yml.tmpl harbor.yml
+vim harbor.yml #见下文
+
+#=====================================================启动=====================================================
+./install.sh #启动 第一次启动会创建docker.compose.yaml文件，证明是用docker启动，后续可知需要启动可以直接执行docker.compose命令
+
+#=====================================================测试=====================================================
+#登录：10.1.20.235：admin:Harbor12345
+#新建账户：sunpeng.Sp610527，新建仓库：repository，为仓库授权，切换账户（也可以直接使用默认账户）
+#本次测试使用的账户是sunpeng.Sp610527，仓库是repository
+
+#================================================docker集成harbor===============================================
+vim /etc/docker/daemon.json #见下文
+systemctl restart docker #重启docker
+#gitlab不用重启，自动重启有效
+#jenkins需要重启，自动重启没有成功（注意不要删除镜像，不然配置，仓库等会丢失）
+#harbor需要重启，自动重启没有成功（注意不要删除镜像，不然配置，仓库等会丢失）
+
+#================================================docker集成harbor测试============================================
+docker login -u sunpeng -p Sp610527 10.1.20.235:80
+docker push [harbor地址/项目名/镜像名:版本]
+docker pull [harbor地址/项目名/镜像名:版本]
+#注意：docker访问harbor的默认链接方式是https，那么默认端口是443，所以自测是需要指定端口80
+```
+
+
+
+- **harbor.yml  本机ip=10.1.20.235**
+
+![image-20211130215555218](devops.assets/image-20211130215555218.png)
+
+
+
+- **daemon.json**
+
+```json
+{
+        "registry-mirrors": ["https://pee6w651.mirror.aliyuncs.com","https://h45068lf.mirror.aliyuncs.com"],
+        "insecure-registries": ["10.1.20.235:80"]
+}
+```
+
+
+
+
+
+#### 1.6.2 jenkins内部使用docker构建镜像并上传到harbor
+
+- jenkins内部使用docker所需配置
+
+  ```sh
+  # docker为其他用户授权
+  chown root:root /var/run/docker.sock 
+  chmod o+rw /var/run/docker.sock
+    
+  # jenkins配置
+  vim docker-compose.yaml #见下文，修改是jenkins的启动文件
+  docker-compose up -d #重启jenkins
+  ```
+
+  docker为其他用户授权
+
+  ![image-20221118101901315](devops.assets/image-20221118101901315.png)
+
+  docker-compose.yaml
+
+  ```yaml
+  version: "3.1"
+  services:
+    jenkins:
+      restart: always
+      image: jenkins/jenkins
+      container_name: jenkins
+      ports:
+        - 8080:8080
+        - 50000:50000
+      volumes:
+        - ./data/:/var/jenkins_home/
+        - /usr/bin/docker:/usr/bin/docker
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /etc/docker/daemon.json:/etc/docker/daemon.json
+  ```
+
+- 删除代码中的 docker.compose.yaml 文件，提交并打tag
+
+- 工程配置
+  - 设置参数：略
+  - 设置构建操作
+
+![image-20221109100238666](devops.assets/image-20221109100238666.png)
+
+```sh
+mv target/springboottest.jar docker/
+docker build -t $harbor_url/$harbor_project_name/$project_name:$tag docker/
+docker login -u sunpeng -p Sp610527 $harbor_url
+docker push $harbor_url/$harbor_project_name/$project_name:$tag
+```
+
+- 测试
+
+  构建后，harbor仓库中有新的文件，docker有新的images
+
+
+
+#### 1.6.3 docker从harbor拉去镜像并启动
+
+- docker从harbor拉去镜像并启动脚本
+
+  ```sh
+  vim deploy.sh          #加下文
+  chomd a+x deploy.sh    #设置执行权限
+  echo $PATH             #查看环境变量，得到/usr/local/bin
+  mv deploy.sh /usr/local/bin/deploy.sh  #把deploy.sh放到环境变量中
+  
+  #测试
+  deploy.sh 10.1.20.235:80 repository springboottest v2.0.0 8082
+  #容器正常启动，日志没有问题，springboottest可以正常访问。
+  ```
+
+  deploy.sh
+
+  ```sh
+  harbor_url=$1
+  harbor_project_name=$2
+  project_name=$3
+  tag=$4
+  port=$5
+  
+  imageName=$harbor_url/$harbor_project_name/$project_name:$tag
+  
+  containerId=`docker ps -a | grep ${project_name} | awk '{print $1}'`
+  if [ "$containerId" != "" ] ; then
+      docker stop $containerId
+      docker rm $containerId
+      echo "Delete Container Success"
+  fi
+  
+  imageId=`docker images | grep ${project_name} | awk '{print $3}'`
+  
+  if [ "$imageId" != "" ] ; then
+      docker rmi -f $imageId
+      echo "Delete Image Success"
+  fi
+  
+  docker login -u sunpeng -p Sp610527 $harbor_url
+  
+  docker pull $imageName
+  
+  docker run -d -p $port:8080 --name $project_name $imageName
+  
+  echo "Start Container Success"
+  echo $project_name
+  ```
+
+- jenkins工程构建
+
+  ![image-20221109102323144](devops.assets/image-20221109102323144.png)
+
+  ```sh
+  deploy.sh $harbor_url $harbor_project_name $project_name $tag $port
+  ```
+
+  
+
+
+
+#### 1.6.4 小结：文件映射
+
+/var/jenkins_hone/workspace/springboottest
+
+/usr/locak/docker/data/workspace/springboottest
+
+
+
+jenkins整合gitlab，jenkins把代码拉去到：容器 /var/jenkins_hone/
+
+jenkins整合maven，maven打成jar报，并放大当前目录下：容器 /var/jenkins_hone
+
+jenkins配置数据卷映射：把容器/var/jenkins_hone映射到：./data （当前目录是docker-compose所在的目录），即：/usr/local/docker/data
+
+
+
+jenkins整合ssh，把/usr/local/docker/data/workspace/推到ssh默认目录中，即：/usr/local/test 中
+
+docker 用test 中的jar报和Dockerfile 制作镜像，启动镜像
+
+
+
+现在：制作镜像放在jenkins中完成，再推到harhon中，然后docker重harhon拉去镜像，再启动镜像。
+
+
+
+
+
+### 1.7 jenkin pipeline
+
+#### 1.7.1 新建流水线项目
+
+流水线方式一：通过脚本
+
+![image-20221111134635162](devops.assets/image-20221111134635162.png)
+
+流水线方式二：通过git中的脚本（git中的jenkinsfile文件）
+
+![image-20221111134514289](devops.assets/image-20221111134514289.png)
+
+
+
+#### 1.7.2 脚本文件
+
+##### 1.7.2.1 示例
+
+```groovy
+pipeline {       //工程名称
+    agent any    //任意jenkins节点
+    
+    environment{  //环境变量
+        user = 'sunpeng'
+    }
+
+    stages {     //所有步骤
+        stage('Hello') {  //步骤1，Hello:步骤名
+			echo 'Hello World'     //打印 Hello World
+            echo "Hello ${user}"   //打印 Hello sunpeng
+        }
+    }
+}
+```
+
+##### 1.7.2.2 本项目
+
+```groovy
+pipeline {
+    agent any
+
+    environment{
+        harbor_url = '10.1.20.235:80'
+        harbor_project_name = 'repository'
+        harborUser = 'sunpeng'
+        harborPasswd = 'Sp610527'
+    }
+
+    stages {
+        stage('通过git拉取代码') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '${tag}']], extensions: [], userRemoteConfigs: [[url: 'http://10.1.20.235:8929/root/springboottest.git']]])            }
+        }
+        stage('通过maven打包') {
+            steps {
+                sh '/var/jenkins_home/maven/bin/mvn clean package'
+            }
+        }
+        stage('通过docker构建镜像') {
+            steps {
+                sh '''mv target/*.jar docker/
+                docker build -t ${harbor_url}/${harbor_project_name}/${JOB_NAME}:${tag} docker/
+                docker image prune -f'''
+            }
+        }
+        stage('向harbor推送代码') {
+            steps {
+                sh '''docker login -u ${harborUser} -p ${harborPasswd} $harbor_url
+                docker push ${harbor_url}/${harbor_project_name}/${JOB_NAME}:${tag}'''
+            }
+        }
+        stage('通知宿主机执行任务') {
+            steps {
+                sshPublisher(publishers: [sshPublisherDesc(configName: 'test', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: "deploy.sh $harbor_url $harbor_project_name $JOB_NAME $tag $port", execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '', remoteDirectorySDF: false, removePrefix: '', sourceFiles: '')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+            }
+        }
+    }
+
+
+}
+
+```
+
+##### 1.7.2.3 groovy语法：字符串中的变量
+
+```groovy
+pipeline {
+    agent any
+
+    environment{
+        harbor_url = '10.1.20.235:80'
+        harbor_project_name = 'repository'
+        harborUser = 'sunpeng'
+        harborPasswd = 'Sp610527'
+    }
+    stages {
+        stage('Hello') {
+			echo 'Hello World'    //字符串中：无变量用单引号 
+            echo "Hello ${user}"  //字符串中：有变量用双引号 
+            sh '/var/jenkins_home/maven/bin/mvn clean package' //sh命令中：无变量用单引号
+            sh '''docker build -t ${harbor_url}/${harbor_project_name}/${JOB_NAME}:${tag} docker/'''//sh命令中：有变量用三引号
+        }
+        
+        // 特殊情况：execCommand: "deploy.sh $harbor_url $harbor_project_name $JOB_NAME $tag $port"，这里用双引号，且不用&{}，只用$
+        stage('通知宿主机执行任务') {
+            steps {
+                sshPublisher(publishers: [sshPublisherDesc(configName: 'test', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: "deploy.sh $harbor_url $harbor_project_name $JOB_NAME $tag $port", execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '', remoteDirectorySDF: false, removePrefix: '', sourceFiles: '')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+            }
+        }
+    }
+
+
+}
+```
+
+
+
+#### 1.7.3 构建结果
+
+采用 pipeline script for SRC 方式的项目
+
+![image-20221111141736874](devops.assets/image-20221111141736874.png)
+
+
+
+
+
+
+
+### 1.8 k8s
+
+#### 1.8.1 介绍
+
+官网 https://kubernetes.io/
+
+#### 1.8.2 安装
+
+安装教程 https://kuboard.cn/
+
+#### 1.8.3 图形化界面
+
+dashboard: http://10.1.20.235:32000/
+
+Kuboard: http://10.1.20.235:30080/
+
+#### 1.8.4 ns & pod & deployment & service 
+
+#### 1.8.5 Ingress
+
+
+
+#### 1.8.6 jenkins 集成 k8s
+
+本地容器启动
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: test
+  name: pipeline
+  labels:
+    app: pipeline
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pipeline
+  template:
+    metadata:
+      labels:
+        app: pipeline
+    spec:
+      containers:
+        - name: pipeline
+          image: 10.1.20.235:80/repository/pipeline:v6.0.0
+          imagePullPolicy: Never
+          #imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: test
+  labels:
+    app: pipeline
+  name: pipeline
+spec:
+  selector:
+    app: pipeline
+  ports:
+    - port: 8085
+      targetPort: 8080
+  type: NodePort
+```
+
+
+
+docker重启
+
+```sh
+chown root:root /var/run/docker.sock 
+chmod o+rw /var/run/docker.sock
+```
+
+
+
+JenKins无密码访问k8s-master机器
+
+```sh
+docker exec -it jenkins bash  #进入jenkins中
+ls ~/.ssh  #查看机器上是否用于公私钥
+ssh-keygen -t rsa  #生成公私钥
+cd ~/.ssh
+scp id_rsa.pub root@10.1.20.235:/root/.ssh/authorized_keys #将公钥复制到k8s-master机器上
+ssh root@10.1.20.235 kubectl apply -f /usr/local/k8s/pipeline/pipeline-deployment.yaml #测试无密码执行
+```
+
+
+
+Jenkinsfile文本
+
+```groovy
+pipeline {
+    agent any
+
+    environment{
+        harbor_url = '10.1.20.235:80'
+        harbor_project_name = 'repository'
+        harborUser = 'sunpeng'
+        harborPasswd = 'Sp610527'
+    }
+
+    stages {
+        stage('通过git拉取代码') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '${tag}']], extensions: [], userRemoteConfigs: [[url: 'http://10.1.20.235:8929/root/springboottest.git']]])            }
+        }
+        stage('通过maven打包') {
+            steps {
+                sh '/var/jenkins_home/maven/bin/mvn clean package'
+            }
+        }
+        stage('通过docker构建镜像') {
+            steps {
+                sh '''mv target/*.jar docker/
+                docker build -t ${harbor_url}/${harbor_project_name}/${JOB_NAME}:${tag} docker/
+                docker image prune -f'''
+            }
+        }
+        stage('向harbor推送代码') {
+            steps {
+                sh '''docker login -u ${harborUser} -p ${harborPasswd} $harbor_url
+                docker push ${harbor_url}/${harbor_project_name}/${JOB_NAME}:${tag}'''
+            }
+        }
+        stage('通过ssh向master服务器推送deployment文件') {
+            steps {
+                sshPublisher(publishers: [sshPublisherDesc(configName: 'test', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '../k8s/pipeline/', remoteDirectorySDF: false, removePrefix: '', sourceFiles: 'pipeline-deployment.yaml')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+            }
+        }
+        stage('远程执行kubectl命令') {
+            steps {
+                sh 'ssh root@10.1.20.235 kubectl apply -f /usr/local/test/pipeline-deployment.yaml'
+            }
+        }       
+    }
+
+
+
+}
+
+```
+
+
+
+
+
+#### 1.8.7 基于GitLab的WebHooks(钩子)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
