@@ -1085,9 +1085,14 @@ spec: # 描述
 ```
 
 - ClusterIP：默认值，它是Kubernetes系统自动分配的虚拟IP，只能在集群内部访问
+
 - NodePort：将Service通过指定的Node上的端口暴露给外部，通过此方法，就可以在集群外部访问服务
+
 - LoadBalancer：使用外接负载均衡器完成到服务的负载分发，注意此模式需要外部云环境支持
+
 - ExternalName： 把集群外部的服务引入集群内部，直接使用
+
+  
 
 ## 5、volume-数据存储
 
@@ -2059,7 +2064,7 @@ pipeline {
             sh '''docker build -t ${harbor_url}/${harbor_project_name}/${JOB_NAME}:${tag} docker/'''//sh命令中：有变量用三引号
         }
         
-        // 特殊情况：execCommand: "deploy.sh $harbor_url $harbor_project_name $JOB_NAME $tag $port"，这里用双引号，且不用&{}，只用$
+        // 特殊情况：execCommand: "deploy.sh $harbor_url $harbor_project_name $JOB_NAME $tag $port"，这里用双引号，且不用${}，只用$
         stage('通知宿主机执行任务') {
             steps {
                 sshPublisher(publishers: [sshPublisherDesc(configName: 'test', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: "deploy.sh $harbor_url $harbor_project_name $JOB_NAME $tag $port", execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '', remoteDirectorySDF: false, removePrefix: '', sourceFiles: '')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
@@ -2236,6 +2241,180 @@ pipeline {
 
 
 #### 1.8.7 基于GitLab的WebHooks(钩子)
+
+新建项目：代码
+
+部署文件：devops
+
+git：本地仓库，远程仓库，.gitgnore
+
+
+
+k8s-master服务器端口分配：
+
+gitlab:8929
+
+jenkins:8080
+
+harbor:80
+
+dashboard：32000
+
+test命名空间下：330**
+
+- citest: 33001
+
+
+
+
+
+```groovy
+pipeline {
+    agent any
+
+    environment{
+        service_name = 'citest'
+        project_name = 'test'
+        git_url = 'http://10.1.20.235:8929/root/citest.git'
+        harbor_url = '10.1.20.235:80'
+        harbor_project_name = "${project_name}"
+        harbor_user = 'admin'
+        harbor_passwd = 'Harbor12345'
+    }
+
+    stages {
+        // 初始路径： /var/jenkins_home/workspace
+        stage('通过git拉取代码') {
+            steps {
+                git branch: "${branch}", url: "${git_url}" 
+            }
+        }
+        stage('通过maven打包') {
+            steps {
+                sh '/var/jenkins_home/maven/bin/mvn clean package'
+            }
+        }
+        // 此时路径：/var/jenkins_home/workspace/${service_name}
+        stage('通过docker构建镜像') {
+            steps {
+                sh '''mv target/*.jar docker/
+                docker build -t ${harbor_url}/${harbor_project_name}/${project_name}:latest devops/
+                docker image prune -f'''
+            }
+        }
+        
+//FROM daocloud.io/library/java:8u40-jdk
+//COPY citest.jar /usr/local/  
+//在devops/命令下制作镜像，路径是 **/data/workspace/${service_name}/devops，但并未实际进入devops路径下
+//WORKDIR /usr/local/
+//CMD java -jar citest.jar
+        
+        
+        stage('向harbor推送代码') {
+            steps {
+                sh '''docker login -u ${harbor_user} -p ${harbor_passwd} $harbor_url
+                docker push ${harbor_url}/${harbor_project_name}/${project_name}:latest'''
+            }
+        }
+        stage('通过ssh向master服务器推送deployment文件') {
+            steps {
+                sshPublisher(publishers: [sshPublisherDesc(configName: 'test', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '../k8s/pipeline/', remoteDirectorySDF: false, removePrefix: '', sourceFiles: 'citest-deployment.yaml')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+            }
+        }
+        stage('远程执行kubectl命令') {
+            steps {
+                sh 'ssh root@10.1.20.235 kubectl apply -f /usr/local/test/citest-deployment.yaml'
+            }
+        }       
+    }
+
+
+
+}
+
+
+pipeline {
+    agent any
+
+    environment{
+        service_name = 'citest'
+        project_name = 'test'
+        git_url = 'http://10.1.20.235:8929/root/citest.git'
+        harbor_url = '10.1.20.235:80'
+        harbor_project_name = '${project_name}'
+        harbor_user = 'admin'
+        harbor_passwd = 'Harbor12345'
+        test1 = project_name
+        test2 = '${project_name}'
+    }
+
+    stages {
+        stage('语法测试') {
+            steps {
+                echo "test1 = ${test1}"
+                echo "test2 = ${test2}"
+            }
+        }
+        stage('通过git拉取代码') {
+            steps {
+                git branch: '${git_branch}', url: '${git_url}'
+            }
+        }
+}
+
+```
+
+
+
+1、Jenkinsfile通过git拉取，不能使用参数
+
+2、git拉取代码的位置在 ~/workspace/${service-name} 下，这样的话服务同名就会有问题，
+
+应该添加路径~/workspace/${project-name}/${service-name} ，
+
+或者重命名：~/workspace/${project-name}-${service-name}
+
+兆日是重命名，我们自己的暂不解决。
+
+3、
+
+
+
+
+
+遇到过的问题：
+
+安装gitlab插件失败，连锁导致大部分插件异常，删除所有插件重装没有成功，删除jenkins重装才成功
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
