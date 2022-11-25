@@ -1,4 +1,4 @@
-# 快速使用
+快速使用
 
 ## 1、基础命令
 
@@ -1420,261 +1420,13 @@ data:
 
 
 
-# 四、公司k8s
 
-## 1、容器
 
-![image-20220617142835193](devops.assets/image-20220617142835193.png)
+# 四、jenkins
 
-- bin: jvm启动脚本
+## 1、free
 
-- conf: 配置文件
-  - 环境变量：存储方式configMap
-  - endpoint.yaml
-
-- lib: jar包，服务打成的jar包
-
-- log: 日志：存储方式hostPath
-
-
-
-
-
-# 五、devops
-
-### 1.1 gitlab
-
-```sh
-#前置准备
-docker version  #docker已安装
-docker-compose version  #docker-compose已安装
-systemctl status docker #docker已启动
-systemctl status firewall #防火墙已关闭
-
-#安装镜像：安装gitlab最新版本
-docker pull gitlab/gitlab-ce
-docker images #查看安装的镜像
-
-#启动容器
-cd /usr/local/gitlab
-vim docker-compose.yml #文件见下文
-docker-compose up -d #启动
-docker logs -f #查看日志
-#启动失败情况：1）内存不够； 2）docker-compose.yml文件内容有问题
-
-#测试
-#浏览器 http://10.1.20.235:8929
-#username:root
-#password:容器中获取
-	docker exec -it gitlab bash
-	cat /etc/gitlab/initial_root_password
-#重置密码：sp610527
-```
-
-
-
-docker-compose.yml（external_url是宿主机ip）
-
-```yaml
-version: '3.1'
-services:
-  gitlab:
-    image: 'gitlab/gitlab-ce:latest'
-    container_name: gitlab
-    restart: always
-    environment:
-      GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://10.1.20.235:8929'
-        gitlab_rails['gitlab_shell_ssh_port'] = 2224
-    ports:
-      - '8929:8929'
-      - '2224:2224'
-    volumes:
-      - './config:/etc/gitlab'
-      - './logs:/var/log/gitlab'
-      - './data:/var/opt/gitlab'
-```
-
-
-
-### 1.2  jdk
-
-```sh
-#安装
-java -version #查看是否安装（也可能未配置环境变量）
-yum install java-1.8.0-openjdk* -y #yum安装方法会自动配置环境变量
-#默认安装位置 /usr/lib/jvm
-```
-
-
-
-### 1.3 maven
-
-```sh
-#资源
-#官网下载（下载tar.gz文件） https://maven.apache.org/
-cd /usr/local
-tar -zxvf [.tar.gz]
-cd /usr/local/maven/config
-vim settings.xml #修改内容见下文
-```
-
-setting.xml
-
-```xml
-<!--新增阿里云镜像-->
-<mirror>
-    <id>aliyunmaven</id>
-    <mirrorOf>*</mirrorOf>
-    <name>阿里云公共仓库</name>
-    <url>https://maven.aliyun.com/repository/public</url>
-</mirror>
-
-<!--修改jdk编译版本，默认是1.4，改为1.8-->
-<profile>
-    <id>jdk18</id>
-    <activation>
-        <activeByDefault>true</activeByDefault>
-        <jdk>1.8</jdk>
-    </activation>
-    <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>
-    </properties>
-</profile>
-```
-
-
-
-### 1.4 docker
-
-
-
-### 1.5 jenkins
-
-#### 1.5.1 安装
-
-integrate工具
-
-持续集成，持续部署 cicd
-
-```sh
-#拉去镜像 lts时稳定版
-docker pull jenkins/jenkins:2.361.2-lts
-
-#启动
-cd /usr/local/docker/jenkins_docker
-vim docker_compose.yaml #见下文
-chmod -R a+w data/
-docker-compose up -d
-
-#登录
-#10.1.20.235:8080
-#密码
-docker exec -it jenkins cat /var/jenkins_home/secrets/initialAdminPassword
-
-#下载插件前配置镜像源
-vim data/hudson.model.UpdateCenter.xml #见下文
-#下载插件
-
-#新建用户
-root:root
-```
-
-- docker_compose.yaml
-
-```yaml
-version: "3.1"
-services:
-  jenkins:
-    image: jenkins/jenkins
-    container_name: jenkins
-    ports:
-      - 8080:8080
-      - 50000:50000
-    volumes:
-      - ./data/:/var/jenkins_home/
-```
-
-- hudson.model.UpdateCenter.xml
-
-```xml
-<?xml version='1.1' encoding='UTF-8'?>
-<sites>
-  <site>
-    <id>default</id>
-    <url>http://mirror.esuni.jp/jenkins/updates/update-center.json</url>
-  </site>
-</sites>
-<!--清华大学的插件源也可以https://mirrors.tuna.tsinghua.edu.cn/jenkins/updates/update-center.json-->
-```
-
-
-
-#### 1.5.2 配置插件
-
-dasgboard -> Manage jenkins
-
-![image-20221102192249689](devops.assets/image-20221102192249689.png)
-
-- 插件管理 -> 下载插件 -> Git Parameter 和 publish over ssh
-
-![image-20221102192519025](devops.assets/image-20221102192519025.png)
-
-![image-20221102192613427](devops.assets/image-20221102192613427.png)
-
-
-
-- 全局配置：jdk 和 maven
-
-![image-20221102193429506](devops.assets/image-20221102193429506.png)
-
-
-
-![image-20221102193448991](devops.assets/image-20221102193448991.png)
-
-
-
-- 系统配置：ssh(从远程拉取文件，代码)
-
-  配置完后点击：test configuration 测试链接通过
-
-![image-20221102193547814](devops.assets/image-20221102193547814.png)
-
-
-
-
-
-
-
-https://maven.apache.org/
-
-https://hub.daocloud.io/
-
-
-
-#### 1.5.3 本地开发并推到gitlab
-
-gitlab 创建项目
-
-设置本地git的用户名和邮箱（已有的不用重复设置）
-
-创建本地项目并初始化git
-
-推到本地仓库，注意添加 .gitgnore 文件
-
-推到远程仓库，第一次退需要设置远程仓库地址，使用http的方式，用户名密码：root:sp610527
-
-![image-20221103095204709](devops.assets/image-20221103095204709.png)
-
-
-
-
-
-#### 1.5.4 构建
-
-参数
+tag参数
 
 ![image-20221103175219441](devops.assets/image-20221103175219441.png)
 
@@ -1690,44 +1442,6 @@ gitlab 创建项目
 
 ![image-20221103175433195](devops.assets/image-20221103175433195.png)
 
-
-
-maven
-
-```xml
-    <build>
-        <finalName>springboottest</finalName>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
-```
-
-Dockerfile
-
-```dockerfile
-FROM daocloud.io/library/java:8u40-jdk
-COPY springboottest.jar /usr/local/
-WORKDIR /usr/local/
-CMD java -jar springboottest.jar
-```
-
-docker.compose.yaml
-
-```yaml
-version: '3.1'
-services:
-  springboottest:
-    build: ./
-    image: springboottest:v1.0
-    container_name: springboottest
-    ports:
-      - 8081:8080
-```
-
 jenkins
 
 ```sh
@@ -1738,188 +1452,40 @@ docker-compose up -d --build  #--build不使用缓存
 docker image prune -f  #相同的镜像新的会覆盖老的，老的变成none，此命令就是删除所有的none
 ```
 
-
-
-### 1.6 Harbor
-
-**Harbor是镜像(私有)仓库，它解决了不同环境部署时需要重复制作镜像。比如，兆日pro环境用的就是uat环境的镜像。**
-
->  Docker官方提供了Registry镜像仓库，但是Registry的功能相对简陋。Harbor是VMware公司提供的一款镜像仓库，提供了权限控制、分布式发布、强大的安全扫描与审查机制等功能
-
-将jenkins构建步骤修改为：
-
-- 同样，从gitlab拉取，maven构建
-- jenkins构建镜像，并上传到harbor（jenkins构建镜像的方式仍然是使用宿主机的docker，不会在jenkins中安装docker）
-- docker从harbor拉取镜像，并启动
-
-
-
-
-
-
-
-#### 1.6.1 harbor安装和使用
+deploy.sh
 
 ```sh
-#=====================================================资源=====================================================
-#下载：https://github.com/goharbor/harbor/releases/download/v2.3.4/harbor-offline-installer-v2.3.4.tgz
-tar -zxvf harbor-offline-installer-v2.3.4.tgz -C /usr/local/
+harbor_url=$1
+harbor_project_name=$2
+project_name=$3
+tag=$4
+port=$5
 
-#=====================================================配置=====================================================
-cd /usr/local/harbor/
-cp harbor.yml.tmpl harbor.yml
-vim harbor.yml #见下文
+imageName=$harbor_url/$harbor_project_name/$project_name:$tag
 
-#=====================================================启动=====================================================
-./install.sh #启动 第一次启动会创建docker.compose.yaml文件，证明是用docker启动，后续可知需要启动可以直接执行docker.compose命令
+containerId=`docker ps -a | grep ${project_name} | awk '{print $1}'`
+if [ "$containerId" != "" ] ; then
+    docker stop $containerId
+    docker rm $containerId
+    echo "Delete Container Success"
+fi
 
-#=====================================================测试=====================================================
-#登录：10.1.20.235：admin:Harbor12345
-#新建账户：sunpeng.Sp610527，新建仓库：repository，为仓库授权，切换账户（也可以直接使用默认账户）
-#本次测试使用的账户是sunpeng.Sp610527，仓库是repository
+imageId=`docker images | grep ${project_name} | awk '{print $3}'`
 
-#================================================docker集成harbor===============================================
-vim /etc/docker/daemon.json #见下文
-systemctl restart docker #重启docker
-#gitlab不用重启，自动重启有效
-#jenkins需要重启，自动重启没有成功（注意不要删除镜像，不然配置，仓库等会丢失）
-#harbor需要重启，自动重启没有成功（注意不要删除镜像，不然配置，仓库等会丢失）
+if [ "$imageId" != "" ] ; then
+    docker rmi -f $imageId
+    echo "Delete Image Success"
+fi
 
-#================================================docker集成harbor测试============================================
-docker login -u sunpeng -p Sp610527 10.1.20.235:80
-docker push [harbor地址/项目名/镜像名:版本]
-docker pull [harbor地址/项目名/镜像名:版本]
-#注意：docker访问harbor的默认链接方式是https，那么默认端口是443，所以自测是需要指定端口80
-```
-
-
-
-- **harbor.yml  本机ip=10.1.20.235**
-
-![image-20211130215555218](devops.assets/image-20211130215555218.png)
-
-
-
-- **daemon.json**
-
-```json
-{
-        "registry-mirrors": ["https://pee6w651.mirror.aliyuncs.com","https://h45068lf.mirror.aliyuncs.com"],
-        "insecure-registries": ["10.1.20.235:80"]
-}
-```
-
-
-
-
-
-#### 1.6.2 jenkins内部使用docker构建镜像并上传到harbor
-
-- jenkins内部使用docker所需配置
-
-  ```sh
-  # docker为其他用户授权
-  chown root:root /var/run/docker.sock 
-  chmod o+rw /var/run/docker.sock
-    
-  # jenkins配置
-  vim docker-compose.yaml #见下文，修改是jenkins的启动文件
-  docker-compose up -d #重启jenkins
-  ```
-
-  docker为其他用户授权
-
-  ![image-20221118101901315](devops.assets/image-20221118101901315.png)
-
-  docker-compose.yaml
-
-  ```yaml
-  version: "3.1"
-  services:
-    jenkins:
-      restart: always
-      image: jenkins/jenkins
-      container_name: jenkins
-      ports:
-        - 8080:8080
-        - 50000:50000
-      volumes:
-        - ./data/:/var/jenkins_home/
-        - /usr/bin/docker:/usr/bin/docker
-        - /var/run/docker.sock:/var/run/docker.sock
-        - /etc/docker/daemon.json:/etc/docker/daemon.json
-  ```
-
-- 删除代码中的 docker.compose.yaml 文件，提交并打tag
-
-- 工程配置
-  - 设置参数：略
-  - 设置构建操作
-
-![image-20221109100238666](devops.assets/image-20221109100238666.png)
-
-```sh
-mv target/springboottest.jar docker/
-docker build -t $harbor_url/$harbor_project_name/$project_name:$tag docker/
 docker login -u sunpeng -p Sp610527 $harbor_url
-docker push $harbor_url/$harbor_project_name/$project_name:$tag
+
+docker pull $imageName
+
+docker run -d -p $port:8080 --name $project_name $imageName
+
+echo "Start Container Success"
+echo $project_name
 ```
-
-- 测试
-
-  构建后，harbor仓库中有新的文件，docker有新的images
-
-
-
-#### 1.6.3 docker从harbor拉去镜像并启动
-
-- docker从harbor拉去镜像并启动脚本
-
-  ```sh
-  vim deploy.sh          #加下文
-  chomd a+x deploy.sh    #设置执行权限
-  echo $PATH             #查看环境变量，得到/usr/local/bin
-  mv deploy.sh /usr/local/bin/deploy.sh  #把deploy.sh放到环境变量中
-  
-  #测试
-  deploy.sh 10.1.20.235:80 repository springboottest v2.0.0 8082
-  #容器正常启动，日志没有问题，springboottest可以正常访问。
-  ```
-
-  deploy.sh
-
-  ```sh
-  harbor_url=$1
-  harbor_project_name=$2
-  project_name=$3
-  tag=$4
-  port=$5
-  
-  imageName=$harbor_url/$harbor_project_name/$project_name:$tag
-  
-  containerId=`docker ps -a | grep ${project_name} | awk '{print $1}'`
-  if [ "$containerId" != "" ] ; then
-      docker stop $containerId
-      docker rm $containerId
-      echo "Delete Container Success"
-  fi
-  
-  imageId=`docker images | grep ${project_name} | awk '{print $3}'`
-  
-  if [ "$imageId" != "" ] ; then
-      docker rmi -f $imageId
-      echo "Delete Image Success"
-  fi
-  
-  docker login -u sunpeng -p Sp610527 $harbor_url
-  
-  docker pull $imageName
-  
-  docker run -d -p $port:8080 --name $project_name $imageName
-  
-  echo "Start Container Success"
-  echo $project_name
-  ```
 
 - jenkins工程构建
 
@@ -1931,37 +1497,7 @@ docker push $harbor_url/$harbor_project_name/$project_name:$tag
 
   
 
-
-
-#### 1.6.4 小结：文件映射
-
-/var/jenkins_hone/workspace/springboottest
-
-/usr/locak/docker/data/workspace/springboottest
-
-
-
-jenkins整合gitlab，jenkins把代码拉去到：容器 /var/jenkins_hone/
-
-jenkins整合maven，maven打成jar报，并放大当前目录下：容器 /var/jenkins_hone
-
-jenkins配置数据卷映射：把容器/var/jenkins_hone映射到：./data （当前目录是docker-compose所在的目录），即：/usr/local/docker/data
-
-
-
-jenkins整合ssh，把/usr/local/docker/data/workspace/推到ssh默认目录中，即：/usr/local/test 中
-
-docker 用test 中的jar报和Dockerfile 制作镜像，启动镜像
-
-
-
-现在：制作镜像放在jenkins中完成，再推到harhon中，然后docker重harhon拉去镜像，再启动镜像。
-
-
-
-
-
-### 1.7 jenkin pipeline
+## 2、pipeline
 
 #### 1.7.1 新建流水线项目
 
@@ -2090,55 +1626,713 @@ pipeline {
 
 
 
-### 1.8 k8s
+# 五、devops
 
-#### 1.8.1 介绍
+## 1、从零开始构建一套基础环境
+
+> 本次搭建的时一套自动挂部署环境，用到的主要组件有：gitlab docker jenkins harbor k8s，已下是些声明：
+>
+> 1）操作系统采用 centos7.9，一共三台主机，分别是： cicd、k8s-master、k8s-node1
+>
+> 2）jenkins 采用pipeline方式构建项目，自动化方式是ci
+>
+> 
+
+### 1.1 虚拟机安装
+
+#### 1.1.1 创建一个模板机
+
+- 新建虚拟机
+  - 选择系统安装位置，系统类型，系统版本：red hat(64-bit)
+  - 选择内存大小：8G
+  - 现在创建虚拟硬盘，文件类型选择VDI，动态分配，虚拟硬盘位置不要选在C盘：100G
+
+- 配置安装
+  - 存储 -》没有盘片 -》分配光驱 -》选择本地的iso
+  - 系统 -》启动顺序 -》把光驱排在第一个
+
+- 安装
+  - 确定安装，安装语言选择中文（这里设置的仅仅是安装语言）
+  - 安装位置 -》 本地标准盘 -》 自动分配分区 -> 完成 -》 开始安装
+  - root密码 -》 root:root -》完成 -》重启
+
+```sh
+#网络：桥接模式
+#网卡:开机启动，将动态获取ip改为静态获取
+ip addr
+vi /etc/sysconfig/network-scripts/ifcfg-enp0s3
+TYPE=Ethernet 						
+	PROXY_METHOD=none
+	BROWSER_ONLY=no
+	BOOTPROTO=static
+	IPADDR=10.1.20.89
+	NETMASK=255.255.255.0
+	GATEWAY=10.1.20.1
+	DNS1=114.114.114.114
+	DEFROUTE=yes
+	IPV4_FAILURE_FATAL=no
+	IPV6INIT=yes
+	IPV6_AUTOCONF=yes
+	IPV6_DEFROUTE=yes
+	IPV6_FAILURE_FATAL=no
+	IPV6_ADDR_GEN_MODE=stable-privacy
+	NAME=enp0s3                           
+	UUID=b351fca8-3596-4168-a35f-cc927c09e2c4
+	DEVICE=enp0s3
+	ONBOOT=yes                       
+nmcli connection reload #centos7重载网卡
+systemctl restart network #centos8重载网卡
+
+#关闭防火墙
+systmectl stop firewalld    # 关闭
+systmectl disable firewalld # 关闭开机启用
+
+#下载vim
+yum -y install vim*
+
+#版本
+cat /etc/redhat-release #CentOS Linux release 7.9.2009 (Core)
+uname -r  #3.10.0-1160.el7.x86_64
+#内存：2g
+#存储：50g
+#网络：桥接模式
+
+vim ~/.bashrc
+	PS1='\[\e[35;40m\][\u@\h \w]\$: \[\e[m\]'
+		\d ：#代表日期，格式为weekday month date，例如："Mon Aug 1"
+		\H ：#完整的主机名称
+		\h ：#仅取主机的第一个名字
+		\t ：#显示时间为24小时格式，如：HH：MM：SS
+		\T ：#显示时间为12小时格式
+		\A ：#显示时间为24小时格式：HH：MM
+		\u ：#当前用户的账号名称
+		\v ：#BASH的版本信息
+		\w ：#完整的工作目录名称
+		\W ：#利用basename取得工作目录名称，所以只会列出最后一个目录
+		\# ：#下达的第几个命令
+		\$ ：#提示字符，如果是root时，提示符为：# ，普通用户则为：$
+\[\e[35;40m\]: 颜色，其中“F“为字体颜色，编号为30-37，“B”为背景颜色，编号为40-47
+\[\e[m\]：后面不设置
+source /root/.bashrc
+```
+
+#### 1.1.2 克隆三台主机
+
+- 导出虚拟机（将1.1.1创建的虚拟机导出成模板机）
+  - 选择模板（centos7）
+
+  - 开放式虚拟化格式1.0，导出位置，仅包含NAT网卡的MAC地址，写入Manifest地址
+  - 导出成ova格式
+- 导入虚拟机（通过导入的方式克隆出三台一摸一样的虚拟机）
+
+  - 选择系统和存储的安装路径
+  - 重命名虚拟机
+- 设置静态ip
+  - 将动态ip改为静态或为静态ip重新选个ip
+
+- 设置主机信息和主机互联
+
+  ```java
+  timedatectl set-timezone Asia/Shanghai
+  hostnamectl set-hostname [new-hostname] #vim /etc/hostname
+  vim /etc/hosts
+  	10.1.20.235  master
+  	10.1.20.236  node1
+  	10.1.20.237  node2
+  reboot #重启虚拟机
+  ```
+
+- 小结（最终得到三台虚拟机）
+
+  | hostname   | ip          | 内存 | 硬盘 | cpu  |
+  | ---------- | ----------- | ---- | ---- | ---- |
+  | cicd       | 10.1.20.235 | 8G   | 100G | 单核 |
+  | k8s-master | 10.1.20.236 | 8G   | 100G | 单核 |
+  | k8s-node1  | 10.1.20.237 | 4G   | 100G | 单核 |
+
+  
+
+### 1.2 docker安装
+
+#### 1.2.1 dcoker安装
+
+```sh
+#下载Docker依赖组件
+yum -y install yum-utils device-mapper-persistent-data lvm2
+#设置下载Docker的镜像源为阿里云
+yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+#安装Docker服务（没有版本号，默认最新版本）
+yum -y install docker-ce
+#docker版本
+docker version
+# 启动Docker服务
+systemctl start docker
+# 设置开机自动启动
+systemctl enable docker
+
+#配置docker的镜像源
+vim /etc/docker/daemon.json
+```
+
+- daemon.json
+
+  ```json
+  {
+      "registry-mirrors": [
+          "https://pee6w651.mirror.aliyuncs.com",
+          "https://h45068lf.mirror.aliyuncs.com"
+      ]
+  }
+  ```
+
+#### 1.2.2 docker-compose安装
+
+> docker-compose下载得到就是可执行文件，只需授权，重命名，设置全局即可
+
+```sh
+#下载资源：https://github.com/docker/compose （已下载并保存了资源，在resourse目录下）
+# 设置文件权限
+chmod a+x docker-compose-Linux-x86_64
+# 移动到/usr/bin目录下，并重命名为docker-compose
+mv docker-compose-Linux-x86_64 /usr/bin/docker-compose
+```
+
+
+
+### 1.3 gitlab安装
+
+#### 1.3.1 安装
+
+> 在dockers中安装
+
+```sh
+#1.拉取GitLab镜像
+docker search gitlab
+docker pull gitlab/gitlab-ce
+docker images
+
+#2.启动
+cd /usr/local/docker/gitlab
+vim docker-compose.yml #见下文
+docker-compose up -d
+
+#3.登录
+#稍等一小会
+#访问http://101.20.235:8929
+#初始用户 root
+docker exec -it gitlab cat /etc/gitlab/initial_root_password #初始密码
+#第一次登录需要修改密码:见下图
+#修改后账户密码 root:root
+```
+
+- 准备docker-compose.yml文件
+
+  ```yml
+  version: '3.1'
+  services:
+    gitlab:
+      image: 'gitlab/gitlab-ce:latest'
+      container_name: gitlab
+      restart: always
+      environment:
+        GITLAB_OMNIBUS_CONFIG: |
+          external_url 'http://192.168.11.11:8929'
+          gitlab_rails['gitlab_shell_ssh_port'] = 2224
+      ports:
+        - '8929:8929'
+        - '2224:2224'
+      volumes:
+        - './config:/etc/gitlab'
+        - './logs:/var/log/gitlab'
+        - './data:/var/opt/gitlab'
+  ```
+
+- 修改密码
+
+  ![image-20211124193444561](devops.assets/image-20211124193444561.png)
+
+  
+
+#### 1.3.2 使用
+
+- gitlab创建项目：记录clone地址
+
+- idea新建项目citest，编写代码
+
+  ```java
+  package com.controller;
+  
+  import org.springframework.web.bind.annotation.GetMapping;
+  import org.springframework.web.bind.annotation.RestController;
+  
+  @RestController
+  public class HelloController {
+  
+      @GetMapping("/hello")
+      public String hello(){
+          return "hello world 1";
+      }
+  
+  }
+  ```
+
+- 设置本地git的用户名和邮箱（已有的不用重复设置）
+
+- 初始化本地git
+
+- 推到本地仓库，注意添加 .gitgnore 文件
+
+- 推到远程仓库，第一次退需要设置远程仓库地址，使用http的方式，用户名密码：root:sp610527
+
+![image-20221103095204709](devops.assets/image-20221103095204709.png)
+
+
+
+### 1.4 jenkins安装
+
+#### 1.4.1 安装
+
+```sh
+#=======================================1.拉取jenkins镜像======================================
+docker pull jenkins/jenkins
+
+#=============================================2.启动=======================================
+cd /usr/local/docker/jenkins
+vim docker-compose.yml #见下文
+mkdir data   #创建数据映射目录
+chmod -R a+w data/ #为映射目录授权
+docker-compose up -d
+
+#=============================================3.初始化=======================================
+#访问：10.1.20.235:8080
+#稍等一会，页面访问通后，证明jenkins正常启动。
+
+#输入默认密码
+docker exec -it jenkins cat /var/jenkins_home/secrets/initialAdminPassword #查看jenkins默认密码
+
+#安装插件
+#修改插件的下载源
+vim /uar/local/docker/jenkins/data/hudson.model.UpdateCenter.xml #见下文: 替换下载源
+#选择：安装推荐的插件
+
+#创建用户
+#root:root
+```
+
+- 编写docker-compose.yml
+
+  ```yml
+  version: "3.1"
+  services:
+    jenkins:
+      image: jenkins/jenkins
+      container_name: jenkins
+      ports:
+        - 8080:8080
+        - 50000:50000
+      volumes:
+        - ./data/:/var/jenkins_home/
+  ```
+
+- hudson.model.UpdateCenter.xml
+
+  ```xml
+  <?xml version='1.1' encoding='UTF-8'?>
+  <sites>
+    <site>
+      <id>default</id>
+      <url>http://mirror.esuni.jp/jenkins/updates/update-center.json</url>
+    </site>
+  </sites>
+  <!--清华大学的插件源也可以https://mirrors.tuna.tsinghua.edu.cn/jenkins/updates/update-center.json-->
+  ```
+
+
+
+
+
+#### 1.4.2 使用
+
+- 创建一个pipeline风格的任务，任务名为：citest
+
+  ![image-20221125143427716](devops.assets/image-20221125143427716.png)
+
+- 任务配置
+
+  ![网页捕获_25-11-2022_144112_10.1.20.235](devops.assets/网页捕获_25-11-2022_144112_10.1.20.235.jpeg)
+
+
+
+### 1.5 jenkins从gitlab拉取代码
+
+- idea中，根目录下新建包devlop，然后新建文件 Jenkinsfile，文件内容
+
+  ```groovy
+  pipeline {
+      agent any
+  
+      environment{
+          service_name = 'citest'
+          project_name = 'test'
+          git_url = 'http://10.1.20.235:8929/root/citest.git'
+          harbor_url = '10.1.20.235:80'
+          harbor_project_name = "${project_name}"
+          harbor_user = 'admin'
+          harbor_passwd = 'Harbor12345'
+          deployment_file = "${service_name}-deployment.yaml"
+          deployment_name = "${service_name}"
+          k8s_namespace = "${project_name}"
+      }
+  
+      stages {
+          stage('通过git拉取代码') {
+              steps {
+                  git branch: "${branch}", url: "${git_url}"
+              }
+          }
+      }
+  }
+  
+  ```
+
+- 推送到git
+
+- jenkins中citest任务：配置参数branch
+
+  ![image-20221125144938254](devops.assets/image-20221125144938254.png)
+
+- 启动citest任务，得到：
+
+  ![image-20221125144826941](devops.assets/image-20221125144826941.png)
+
+
+
+
+
+### 1.6 gitlab通知jenkins代码变更
+
+#### 1.6.1 jenkins支持gitlab
+
+- jenkins安装插件gitlab
+
+  ![image-20221125145321300](devops.assets/image-20221125145321300.png)
+
+- jenkins中citest任务：配置，当gitlab变更时启动任务
+
+  ![image-20221125145236629](devops.assets/image-20221125145236629.png)
+
+#### 1.6.2 gitlab向jenkins发送消息
+
+- gitlab全局配置：允许发送消息
+
+  gitlabs admin设置 允许通知 gitlab -> Menu -> admin -> setting -> network -> outbound requests
+
+  ![image-20221124144758330](devops.assets/image-20221124144758330.png)
+
+- gitlab的仓库citest配置：连接jenkins
+
+  gitlab -> 项目 -> setting -> Integrations -> jenkins
+
+  ![image-20221125150044944](devops.assets/image-20221125150044944.png)
+
+#### 1.6.3 自动构建
+
+修改代码，push到gitlab上，自动构建
+
+
+
+### 1.7 maven打包
+
+#### 1.7.1 jenkins安装打包插件
+
+> 采用外部下载解压的方式，放到jenkins的工作目录下，而非jenkins中直接下载插件
+
+- 下载maven和jdk，资源在resourse目录下已下载
+
+  ### maven
+
+  ```sh
+  #========================================jdk========================================
+  #下载jdk资源并解压
+  mv jdk /usr/local/docker/data/jdk
+  
+  #========================================maven=========================================
+  #官网下载（下载tar.gz文件） https://maven.apache.org/
+  tar -zxvf [.tar.gz]
+  vim settings.xml #修改内容见下文
+  mv maven /usr/local/docker/data/maven
+  ```
+
+  setting.xml
+
+  ```xml
+  <!--新增阿里云镜像-->
+  <mirror>
+      <id>aliyunmaven</id>
+      <mirrorOf>*</mirrorOf>
+      <name>阿里云公共仓库</name>
+      <url>https://maven.aliyun.com/repository/public</url>
+  </mirror>
+  
+  <!--修改jdk编译版本，默认是1.4，改为1.8-->
+  <profile>
+      <id>jdk18</id>
+      <activation>
+          <activeByDefault>true</activeByDefault>
+          <jdk>1.8</jdk>
+      </activation>
+      <properties>
+          <maven.compiler.source>1.8</maven.compiler.source>
+          <maven.compiler.target>1.8</maven.compiler.target>
+          <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>
+      </properties>
+  </profile>
+  ```
+
+- jenkins全局工具配置
+
+  - maven
+
+  ![image-20221125150733843](devops.assets/image-20221125150733843.png)
+
+  - jdk
+
+    ![image-20221125150812846](devops.assets/image-20221125150812846.png)
+
+#### 1.7.2 构建：打包
+
+- 打包： pom.xml
+
+  ```xml
+      <build>
+          <finalName>citest</finalName>
+          <plugins>
+              <plugin>
+                  <groupId>org.springframework.boot</groupId>
+                  <artifactId>spring-boot-maven-plugin</artifactId>
+              </plugin>
+          </plugins>
+      </build>
+  ```
+
+- Jenkinsfile文件新增
+
+  ```groovy
+  stage('通过maven打包') {
+      steps {
+          sh '/var/jenkins_home/maven/bin/mvn clean package'
+      }
+  }
+  ```
+
+- push代码，自动构建
+
+  ![image-20221125151206594](devops.assets/image-20221125151206594.png)
+
+
+
+### 1.8 docker构建镜像
+
+> 采用在jenkins容器中调用宿主机docker命令的方式，构建镜像。
+
+#### 1.8.1 docker授权
+
+```sh
+chown root:root /var/run/docker.sock 
+chmod o+rw /var/run/docker.sock
+```
+
+#### 1.8.2 jenkins映射docker文件
+
+```sh
+cd /usr/local/docker/jenkins
+vim docker-compose.yaml #见下文
+docker-compose restart  #重启jenkins
+```
+
+```yml
+version: "3.1"
+services:
+  jenkins:
+    image: jenkins/jenkins
+    container_name: jenkins
+    ports:
+      - 8080:8080
+      - 50000:50000
+    volumes:
+      - ./data/:/var/jenkins_home/
+      - /usr/bin/docker:/usr/bin/docker
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/docker/daemon.json:/etc/docker/daemon.json
+```
+
+#### 1.8.3 测试
+
+> 我们需要jenkins使用宿主机的docker，所以测试时需要进入jenkins容器中，然后执行docker命令，成功即可
+
+```sh
+docker exec -it jenkins bash
+jenkins@996875f77324:/$ docker version
+```
+
+#### 1.8.4 部署
+
+- 在./citest/devlop下新建文件：Dockerfile
+
+  ```dockerfile
+  FROM daocloud.io/library/java:8u40-jdk
+  COPY citest.jar /usr/local/
+  WORKDIR /usr/local/
+  CMD java -jar citest.jar
+  ```
+
+- Jenkins添加步骤
+
+  ```groovy
+          stage('通过docker构建镜像') {
+              steps {
+                  sh '''mv target/*.jar .
+                  mv devops/* .
+                  docker build -t ${harbor_url}/${harbor_project_name}/${service_name}:latest .
+                  docker image prune -f'''
+              }
+          }
+  ```
+
+- 构建
+
+  ![image-20221125160118979](devops.assets/image-20221125160118979.png)
+
+
+
+### 1.9 harbor安装
+
+#### 1.9.1 安装
+
+> 这里采用原生的方式安装Harbor。
+
+```sh
+#下载并安装
+#下载Harbor安装包：https://github.com/goharbor/harbor/releases/download/v2.3.4/harbor-offline-installer-v2.3.4.tgz
+tar -zxvf harbor-offline-installer-v2.3.4.tgz -C /usr/local/
+
+#修改配置
+cd harbor
+cp harbor.yml.tmpl harbor.yml
+vim harbor.yml #将下图
+
+#启动
+./install.sh
+
+#登录
+#地址：10.1.20.235:80
+#账户：admin
+#密码：Harbor123456
+
+```
+
+- harbor.yml
+
+  ![image-20211130215555218](devops.assets/image-20211130215555218.png)
+
+#### 1.9.2 使用
+
+新建仓库
+
+![image-20211201213751780](devops.assets/image-20211201213751780.png)
+
+
+
+### 1.10 将镜像推送到harbor
+
+#### 1.10.1 docker向harbor推送所需的权限
+
+> docker通过用户名和密码登录，获取harbor的权限
+
+- daemon.json新增配置：insecure-registries
+
+  修改完成后重启docker。如果gitlab和jenkins没有跟随docker重启成功，需要手动重启。/var/run/docker.sock文件需要重新授权。
+
+  ```json
+  {
+      "registry-mirrors": [
+          "https://pee6w651.mirror.aliyuncs.com",
+          "https://h45068lf.mirror.aliyuncs.com"
+      ],
+      "insecure-registries": [
+          "10.1.20.235:80"
+      ]
+  }
+  ```
+
+- 登录测试
+
+  ```sh
+  docker login -u admin -p Harbor12345 10.1.20.235:80
+  docker pull 10.1.20.235:80/test/citest
+  ```
+
+#### 1.10.2 构建
+
+- Jenkins新增构建步骤
+
+  ```groovy
+          stage('向harbor上传镜像') {
+              steps {
+                  sh '''docker login -u ${harbor_user} -p ${harbor_passwd} $harbor_url
+                  docker push ${harbor_url}/${harbor_project_name}/${service_name}:latest'''
+              }
+          }
+  ```
+
+- 构建
+
+  ![image-20221125162704567](devops.assets/image-20221125162704567.png)
+
+
+
+### 1.11 k8s安装
+
+安装：https://kuboard.cn/install/history-k8s/install-k8s-1.19.x.html
 
 官网 https://kubernetes.io/
-
-#### 1.8.2 安装
-
-安装教程 https://kuboard.cn/
-
-#### 1.8.3 图形化界面
 
 dashboard: http://10.1.20.235:32000/
 
 Kuboard: http://10.1.20.235:30080/
 
-#### 1.8.4 ns & pod & deployment & service 
-
-#### 1.8.5 Ingress
 
 
+### 1.12 deployment文件编写
 
-#### 1.8.6 jenkins 集成 k8s
+#### 1.12.1 编写部署文件
 
-本地容器启动
+在./citest/devlop下编写文件：citest-deployment.yaml
 
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   namespace: test
-  name: pipeline
+  name: citest
   labels:
-    app: pipeline
+    app: citest
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: pipeline
+      app: citest
   template:
     metadata:
       labels:
-        app: pipeline
+        app: citest
     spec:
+      #imagePullSecrets:
+        #- name: harbor
       containers:
-        - name: pipeline
-          image: 10.1.20.235:80/repository/pipeline:v6.0.0
-          imagePullPolicy: Never
-          #imagePullPolicy: Always
+        - name: citest
+          image: 10.1.20.235:80/test/citest:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
 ---
@@ -2147,29 +2341,160 @@ kind: Service
 metadata:
   namespace: test
   labels:
-    app: pipeline
-  name: pipeline
+    app: citest
+  name: citest
 spec:
   selector:
-    app: pipeline
+    app: citest
   ports:
-    - port: 8085
+    - port: 8080
       targetPort: 8080
   type: NodePort
 ```
 
+#### 1.12.2 测试
+
+- 启动
+
+  ```yaml
+  kubectl apply -f citest-delpoyment.yaml
+  ```
+
+- 访问：http://10.1.20.235:30754/hello
+
+  页面打印：hello world 1
 
 
-docker重启
+
+### 1.13 ssh推送deployment文件
+
+#### 1.13.1 jenkins安装插件publish over ssh
+
+- jenkins安装插件publish over ssh
+
+  下载完成后重启jenkins
+
+  ![image-20221102192613427](devops.assets/image-20221102192613427.png)
+
+- 全局配置
+
+  配置完成后点击 test configuration，测试是否连接成功。
+
+  ![image-20221125164548131](devops.assets/image-20221125164548131.png)
+
+#### 1.13.2 使用
+
+- Jenkinsfile新增步骤
+
+  ```sh
+          stage('通过ssh向k8s-master服务器推送deployment文件') {
+              steps {
+                  sshPublisher(publishers: [sshPublisherDesc(configName: 'k8s-master', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: "/$project_name/$service_name/", remoteDirectorySDF: false, removePrefix: '', sourceFiles: "$deployment_file")], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+              }
+          }
+  ```
+
+- 构建结果
+
+  ![image-20221125164757071](devops.assets/image-20221125164757071.png)
+
+
+
+
+
+### 1.14 k8s从harbor拉取镜像
+
+#### 1.14.1 docker从harbor拉取镜像
+
+安装1.10.1的方式，把k8s-master和k8s-master两个节点都配置号权限。
+
+#### 1.14.3 k8s从harbort拉取镜像
 
 ```sh
-chown root:root /var/run/docker.sock 
-chmod o+rw /var/run/docker.sock
+#获取凭证
+docker login -u [username] -p [password] [ip:port]
+cat ~/.docker/config.json |base64 -w 0
+#ewoJImF1dGhzIjogewoJCSIxMC4xLjIwLjIzNTo4MCI6IHsKCQkJImF1dGgiOiAiWVdSdGFXNDZTR0Z5WW05eU1USXpORFU9IgoJCX0KCX0KfQ==
+
+#创建harbor-sercet
+vim harbor-sercet.yaml #见下文
+kubectl create -f sercet harbor-sercet.yaml
+
+#部署文件中添加harbor-sercet
+vim citest-deployment.yaml #见下文
 ```
 
+- harbor-sercet.yaml
+
+  ```yaml
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    namespace: test
+    name: harbor
+  data:
+    .dockerconfigjson: ewoJImF1dGhzIjogewoJCSIxMC4xLjIwLjIzNTo4MCI6IHsKCQkJImF1dGgiOiAiWVdSdGFXNDZTR0Z5WW05eU1USXpORFU9IgoJCX0KCX0KfQ==
+  type: kubernetes.io/dockerconfigjson
+  ```
+
+-  citest-deployment.yaml :  添加imagePullSecrets
+
+  ```yaml
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    namespace: test
+    name: citest
+    labels:
+      app: citest
+  spec:
+    replicas: 2
+    selector:
+      matchLabels:
+        app: citest
+    template:
+      metadata:
+        labels:
+          app: citest
+      spec:
+        imagePullSecrets:
+          - name: harbor
+        containers:
+          - name: citest
+            image: 10.1.20.235:80/test/citest:latest
+            imagePullPolicy: Always
+            ports:
+              - containerPort: 8080
+  ---
+  apiVersion: v1
+  kind: Service
+  metadata:
+    namespace: test
+    labels:
+      app: citest
+    name: citest
+  spec:
+    selector:
+      app: citest
+    ports:
+      - port: 8080
+        targetPort: 8080
+    type: NodePort
+  ```
+
+#### 1.14.3 测试
+
+- 删除已有的镜像
+- 启动时重新拉取镜像：kubectl apply -f citest-delpoyment.yaml
+- 拉取镜像成功即可
 
 
-JenKins无密码访问k8s-master机器
+
+
+
+### 1.15 k8s部署
+
+#### 1.15.1 jenkins无密码访问k8s
 
 ```sh
 docker exec -it jenkins bash  #进入jenkins中
@@ -2180,93 +2505,32 @@ scp id_rsa.pub root@10.1.20.235:/root/.ssh/authorized_keys #将公钥复制到k8
 ssh root@10.1.20.235 kubectl apply -f /usr/local/k8s/pipeline/pipeline-deployment.yaml #测试无密码执行
 ```
 
+#### 1.15.2 部署
 
+- citest-deployment.yaml :  添加imagePullSecrets，和上文一样。
 
-Jenkinsfile文本
+- Jenkinsfile新增步骤
 
-```groovy
-pipeline {
-    agent any
+  ```sh
+          stage('远程执行kubectl命令') {
+              steps {
+                  sh '''ssh root@10.1.20.235 kubectl delete deployment ${deployment_name} -n ${k8s_namespace}
+                  ssh root@10.1.20.235 kubectl apply -f /usr/local/k8s/${project_name}/${service_name}/${deployment_file}'''
+              }
+          }
+  ```
 
-    environment{
-        harbor_url = '10.1.20.235:80'
-        harbor_project_name = 'repository'
-        harborUser = 'sunpeng'
-        harborPasswd = 'Sp610527'
-    }
+- 构建结果
 
-    stages {
-        stage('通过git拉取代码') {
-            steps {
-                checkout([$class: 'GitSCM', branches: [[name: '${tag}']], extensions: [], userRemoteConfigs: [[url: 'http://10.1.20.235:8929/root/springboottest.git']]])            }
-        }
-        stage('通过maven打包') {
-            steps {
-                sh '/var/jenkins_home/maven/bin/mvn clean package'
-            }
-        }
-        stage('通过docker构建镜像') {
-            steps {
-                sh '''mv target/*.jar docker/
-                docker build -t ${harbor_url}/${harbor_project_name}/${JOB_NAME}:${tag} docker/
-                docker image prune -f'''
-            }
-        }
-        stage('向harbor推送代码') {
-            steps {
-                sh '''docker login -u ${harborUser} -p ${harborPasswd} $harbor_url
-                docker push ${harbor_url}/${harbor_project_name}/${JOB_NAME}:${tag}'''
-            }
-        }
-        stage('通过ssh向master服务器推送deployment文件') {
-            steps {
-                sshPublisher(publishers: [sshPublisherDesc(configName: 'test', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '../k8s/pipeline/', remoteDirectorySDF: false, removePrefix: '', sourceFiles: 'pipeline-deployment.yaml')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
-            }
-        }
-        stage('远程执行kubectl命令') {
-            steps {
-                sh 'ssh root@10.1.20.235 kubectl apply -f /usr/local/test/pipeline-deployment.yaml'
-            }
-        }       
-    }
+  ![image-20221125164854016](devops.assets/image-20221125164854016.png)
+
+- 访问：http://10.1.20.235:30754/hello
+
+  页面打印：hello world 1
 
 
 
-}
-
-```
-
-
-
-
-
-#### 1.8.7 基于GitLab的WebHooks(钩子)
-
-新建项目：代码
-
-部署文件：devops
-
-git：本地仓库，远程仓库，.gitgnore
-
-
-
-k8s-master服务器端口分配：
-
-gitlab:8929
-
-jenkins:8080
-
-harbor:80
-
-dashboard：32000
-
-test命名空间下：330**
-
-- citest: 33001
-
-
-
-
+### 1.16 小结
 
 ```groovy
 pipeline {
@@ -2280,13 +2544,15 @@ pipeline {
         harbor_project_name = "${project_name}"
         harbor_user = 'admin'
         harbor_passwd = 'Harbor12345'
+        deployment_file = "${service_name}-deployment.yaml"
+        deployment_name = "${service_name}"
+        k8s_namespace = "${project_name}"
     }
 
     stages {
-        // 初始路径： /var/jenkins_home/workspace
         stage('通过git拉取代码') {
             steps {
-                git branch: "${branch}", url: "${git_url}" 
+                git branch: "${branch}", url: "${git_url}"
             }
         }
         stage('通过maven打包') {
@@ -2294,123 +2560,57 @@ pipeline {
                 sh '/var/jenkins_home/maven/bin/mvn clean package'
             }
         }
-        // 此时路径：/var/jenkins_home/workspace/${service_name}
         stage('通过docker构建镜像') {
             steps {
-                sh '''mv target/*.jar docker/
-                docker build -t ${harbor_url}/${harbor_project_name}/${project_name}:latest devops/
+                sh '''mv target/*.jar .
+                mv devops/* .
+                docker build -t ${harbor_url}/${harbor_project_name}/${service_name}:latest .
                 docker image prune -f'''
             }
         }
-        
-//FROM daocloud.io/library/java:8u40-jdk
-//COPY citest.jar /usr/local/  
-//在devops/命令下制作镜像，路径是 **/data/workspace/${service_name}/devops，但并未实际进入devops路径下
-//WORKDIR /usr/local/
-//CMD java -jar citest.jar
-        
-        
-        stage('向harbor推送代码') {
+        stage('向harbor上传镜像') {
             steps {
                 sh '''docker login -u ${harbor_user} -p ${harbor_passwd} $harbor_url
-                docker push ${harbor_url}/${harbor_project_name}/${project_name}:latest'''
+                docker push ${harbor_url}/${harbor_project_name}/${service_name}:latest'''
             }
         }
-        stage('通过ssh向master服务器推送deployment文件') {
+        stage('通过ssh向k8s-master服务器推送deployment文件') {
             steps {
-                sshPublisher(publishers: [sshPublisherDesc(configName: 'test', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '../k8s/pipeline/', remoteDirectorySDF: false, removePrefix: '', sourceFiles: 'citest-deployment.yaml')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+                sshPublisher(publishers: [sshPublisherDesc(configName: 'k8s-master', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: "/$project_name/$service_name/", remoteDirectorySDF: false, removePrefix: '', sourceFiles: "$deployment_file")], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
             }
         }
         stage('远程执行kubectl命令') {
             steps {
-                sh 'ssh root@10.1.20.235 kubectl apply -f /usr/local/test/citest-deployment.yaml'
-            }
-        }       
-    }
-
-
-
-}
-
-
-pipeline {
-    agent any
-
-    environment{
-        service_name = 'citest'
-        project_name = 'test'
-        git_url = 'http://10.1.20.235:8929/root/citest.git'
-        harbor_url = '10.1.20.235:80'
-        harbor_project_name = '${project_name}'
-        harbor_user = 'admin'
-        harbor_passwd = 'Harbor12345'
-        test1 = project_name
-        test2 = '${project_name}'
-    }
-
-    stages {
-        stage('语法测试') {
-            steps {
-                echo "test1 = ${test1}"
-                echo "test2 = ${test2}"
+                sh '''ssh root@10.1.20.235 kubectl delete deployment ${deployment_name} -n ${k8s_namespace}
+                ssh root@10.1.20.235 kubectl apply -f /usr/local/k8s/${project_name}/${service_name}/${deployment_file}'''
             }
         }
-        stage('通过git拉取代码') {
-            steps {
-                git branch: '${git_branch}', url: '${git_url}'
-            }
-        }
+    }
 }
 
 ```
 
 
 
-1、Jenkinsfile通过git拉取，不能使用参数
-
-2、git拉取代码的位置在 ~/workspace/${service-name} 下，这样的话服务同名就会有问题，
-
-应该添加路径~/workspace/${project-name}/${service-name} ，
-
-或者重命名：~/workspace/${project-name}-${service-name}
-
-兆日是重命名，我们自己的暂不解决。
-
-3、
 
 
 
 
+# 六、sinosun
 
-遇到过的问题：
+## 1、容器
 
-安装gitlab插件失败，连锁导致大部分插件异常，删除所有插件重装没有成功，删除jenkins重装才成功
+![image-20220617142835193](devops.assets/image-20220617142835193.png)
 
+- bin: jvm启动脚本
 
+- conf: 配置文件
+  - 环境变量：存储方式configMap
+  - endpoint.yaml
 
+- lib: jar包，服务打成的jar包
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- log: 日志：存储方式hostPath
 
 
 
