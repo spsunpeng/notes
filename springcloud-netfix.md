@@ -221,7 +221,7 @@ private RestTemplate restTemplate; //restTemplate没有默认支持ribbon，Rest
 
 @GetMapping("/client3")
 public String client3(){
-    return restTemplate.getForObject("http://provider/hello";, String.class);
+    return restTemplate.getForObject("http://provider/hello", String.class);
 }
 @Bean
 @LoadBalanced //restTemplate没有默认支持ribbon

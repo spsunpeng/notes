@@ -1728,8 +1728,9 @@ source /root/.bashrc
   - 选择系统和存储的安装路径
   - 重命名虚拟机
 - 设置静态ip
-  - 将动态ip改为静态或为静态ip重新选个ip
-
+  
+- 将动态ip改为静态或为静态ip重新选个ip
+  
 - 设置主机信息和主机互联
 
   ```java
@@ -1822,7 +1823,7 @@ docker-compose up -d
 #初始用户 root
 docker exec -it gitlab cat /etc/gitlab/initial_root_password #初始密码
 #第一次登录需要修改密码:见下图
-#修改后账户密码 root:root
+#修改后账户密码 root:sp610527
 ```
 
 - 准备docker-compose.yml文件
@@ -2684,7 +2685,17 @@ pipeline {
 
 
 
+## 2、网络
 
+访问方式
+
+https://bplusdev.sinosun.com:31443/mallbbcg2dev/v3/system/v2/api-docs 通过域名解析，nginx1，gatewaw访问
+
+https://bplusdev.sinosun.com:18180/mallbbcg2/v3/system/v2/api-docs 通过域名解析，nginx2，gatewaw访问
+
+https://1.85.9.150:18180/mallbbcg2/v3/system/v2/api-docs 通过ip端口，nginx1，gateway访问
+
+http://10.1.6.12:30532/v3/system/v2/api-docs 通过gateway访问
 
 
 
