@@ -49,7 +49,7 @@ show create table [tableName]; #查
 
 -- ==========================================columns=====================================
 alter table [tableName] add column [columnName] varchar(10) comment ['注释'];#增
-alter le [tableName] drop column [columnName]; #删
+alter [tableName] drop column [columnName]; #删
 show columns from [tableName]; #查
 
 

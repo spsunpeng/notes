@@ -1,4 +1,4 @@
-快速使用
+# 快速使用
 
 ## 1、基础命令
 
@@ -2149,6 +2149,10 @@ chmod o+rw /var/run/docker.sock
 cd /usr/local/docker/jenkins
 vim docker-compose.yaml #见下文
 docker-compose restart  #重启jenkins
+
+#如果重启后映射文件未生效： 关闭后再启动
+docker-compose down 
+docker-compose up -d
 ```
 
 ```yml
@@ -2169,11 +2173,12 @@ services:
 
 #### 1.8.3 测试
 
-> 我们需要jenkins使用宿主机的docker，所以测试时需要进入jenkins容器中，然后执行docker命令，成功即可
+> jenkins需要使用宿主机的docker。所以在jenkins容器中执行docker命令，成功即可。
+>
+> 如果未成功，检查以上两步：docker.sock权限是否放开，volumes中的文件在jenkins容器中是否映射上。
 
 ```sh
-docker exec -it jenkins bash
-jenkins@996875f77324:/$ docker version
+docker exec -it jenkins docker version
 ```
 
 #### 1.8.4 部署
@@ -2248,30 +2253,37 @@ vim harbor.yml #将下图
 
 #### 1.10.1 docker向harbor推送所需的权限
 
-> docker通过用户名和密码登录，获取harbor的权限
+> docker通过用户名和密码登录，获取harbor的权限。daemon.json新增配置：insecure-registries
 
-- daemon.json新增配置：insecure-registries
+```sh
+#修改daemon.json文件
+vim /etc/docker/daemon.json #文件内容如下
 
-  修改完成后重启docker。如果gitlab和jenkins没有跟随docker重启成功，需要手动重启。/var/run/docker.sock文件需要重新授权。
+#重启docker
+systemctl restart docker #重启docker
+#docker.sock重新授权
+chown root:root /var/run/docker.sock 
+chmod o+rw /var/run/docker.sock
+#gitlab和jenkins随docker重启
 
-  ```json
-  {
-      "registry-mirrors": [
-          "https://pee6w651.mirror.aliyuncs.com",
-          "https://h45068lf.mirror.aliyuncs.com"
-      ],
-      "insecure-registries": [
-          "10.1.20.235:80"
-      ]
-  }
-  ```
+#测试
+docker login -u admin -p Harbor12345 10.1.20.235:80
+docker pull 10.1.20.235:80/test/citest
+```
 
-- 登录测试
+daemon.json
 
-  ```sh
-  docker login -u admin -p Harbor12345 10.1.20.235:80
-  docker pull 10.1.20.235:80/test/citest
-  ```
+```json
+{
+    "registry-mirrors": [
+        "https://pee6w651.mirror.aliyuncs.com",
+        "https://h45068lf.mirror.aliyuncs.com"
+    ],
+    "insecure-registries": [
+        "10.1.20.235:80"
+    ]
+}
+```
 
 #### 1.10.2 构建
 
@@ -2659,9 +2671,201 @@ pipeline {
 
 ```
 
+### 1.17 关机重启
+
+```sh
+#docker是否重启
+systemctl status docker
+#如果需要启动
+systemctl start docker
+#docker.sock文件授权
+chown root:root /var/run/docker.sock 
+chmod o+rw /var/run/docker.sock
+
+#gitlab是否重启
+http://10.1.20.235:8929  root:sp610527
+#如果需要启动
+cd /usr/local/docker/gitlab
+docker-compose up -d
+
+#jenkins是否重启
+http://10.1.20.235:8080  root:root
+#如果需要启动
+cd /usr/local/docker/jenkins
+docker-compose up -d
+
+#harbor是否重启
+http://10.1.20.235:80  admin:Harbor12345
+#如果需要启动
+cd /usr/local/docker/harbor
+./install.sh
+
+#k8s是否重启
+systemctl status kubelet
+#如果需要启动
+systemctl start kubelet
+
+#服务是否健康
+http://10.1.20.235:32000
+```
 
 
 
+## 2、maven私服
+
+### 2.1 安装
+
+```sh
+#1.安装
+docker pull sonatype/nexus3
+docker-compose #见下文
+
+#2.登录
+http://10.1.20.235:8081/ #地址
+admin #账户
+docker exec -it nexus3 cat /nexus-data/admin.password #初始密码
+admin:admin #修改后的账户密码
+
+#3.仓库配置
+#将maven-central代理的路径改为国内仓库地址，见2.2
+https://repo1.maven.org/maven2/ --》 http://maven.aliyun.com/nexus/content/groups/public
+
+#4.上传：见2.3
+#setting.xml配置server
+#goods服务pm.xml配置repository
+mvn clean deploy
+
+#5.下载：见2.4
+#setting.xml配置mirror
+#goods服务pm.xml配置repository
+#pom.xml依赖
+```
+
+docker-compose.yaml
+
+```yaml
+version: "3.1"
+services:
+  nexus3:
+    image: sonatype/nexus3
+    container_name: nexus3
+    restart: always
+    ports:
+      - 8081:8081
+    volumes:
+      - '/root/nexus-data:/var/nexus-data'      
+```
+
+
+
+### 2.2 maven仓库
+
+>**proxy**：这是代理方式，它是用来代理中央仓库的，例如我们依赖的包在本地仓库没有，就会到私服获取，私服没有的话，会到中央仓库先把包下载到这里，然后再下载到本地仓库；
+>
+>**hosted**：指的是我们公司或团队内部的包，并且 hosted 类型的仓库会分为 releases 和 snapshots 两个，前者是正式版，后者一般是开发测试版；
+>
+>**group**：它的目的就是把多个仓库组合起来，然后我们项目中只需要配置上这个类型的仓库地址，就可以把它里面组合的几个仓库都关联上。
+
+- **maven-central** 
+
+  系统创建的代理仓库：在我们的私服没有需要jar包时，回到代理仓库下载jar包，所以这里需要配置成国内代理。
+
+  https://repo1.maven.org/maven2/ --》 http://maven.aliyun.com/nexus/content/groups/public
+
+  ![image-20221226163658543](devops.assets/image-20221226163658543.png)
+
+- **maven-public**
+
+  系统提供的聚合仓库，用于下载jar包。
+
+  - maven-releases 我们上传的正式版
+  - maven-snapshots 我们上传的快照版
+  - maven-central 往上的jar包
+
+  ![image-20221226165621734](devops.assets/image-20221226165621734.png)
+
+
+
+
+
+### 2.3 上传
+
+setting.xml
+
+```xml
+    <server>
+        <id>nexus-releases</id>
+        <username>admin</username>
+        <password>admin</password>
+    </server>
+
+    <server>
+        <id>nexus-snapshots</id>
+        <username>admin</username>
+        <password>admin</password>
+    </server>	
+```
+
+goods服务pom.xml
+
+```xml
+<distributionManagement>
+    <repository>
+        <id>nexus-releases</id>
+        <name>maven-releases</name>
+        <url>http://10.1.20.235:8081/repository/maven-releases/</url>
+    </repository>
+    <snapshotRepository>
+        <id>nexus-snapshots</id>
+        <name>maven-snapshots</name>
+        <url>http://10.1.20.235:8081/repository/maven-snapshots/</url>
+    </snapshotRepository>
+</distributionManagement>
+```
+
+上传：mvn clean deploy
+
+
+
+### 2.4 下载
+
+setting.xml
+
+```xml
+	<mirror>
+        <id>maven-public</id>
+        <name>maven-public</name>
+        <url>http://10.1.20.235:8081/repository/maven-public/</url>
+        <snapshots>
+            <enabled>true</enabled>
+        </snapshots>
+	</mirror> 
+```
+
+business服务pom.xml
+
+```xml
+<repositories>
+    <repository>
+        <id>maven-public</id>
+        <name>maven-public</name>
+        <url>http://10.1.20.235:8081/repository/maven-public/</url>
+        <snapshots>
+            <enabled>true</enabled>
+        </snapshots>
+    </repository>
+</repositories>
+```
+
+business服务依赖goods服务
+
+```xml
+<dependency>
+    <groupId>org.example</groupId>
+    <artifactId>goods</artifactId>
+    <version>1.0-20221226.075416-1</version>
+</dependency>
+```
 
 
 
