@@ -2308,6 +2308,30 @@ daemon.json
 
 安装：https://kuboard.cn/install/history-k8s/install-k8s-1.19.x.html
 
+```sh
+hostname
+lscpu
+#docker kubelet kubeadm
+#dokcer镜像下载地址太慢 镜像
+
+#master #2G
+#kubectl
+#建立集群
+
+#node 
+#加入集群 master1 node 
+
+#可视化页面
+#dashboard
+#Kuboard
+
+#网络
+ingree
+
+#共享文件
+nfs
+```
+
 官网 https://kubernetes.io/
 
 dashboard: http://10.1.20.235:32000/
@@ -2419,9 +2443,9 @@ spec:
 
 #### 1.14.1 docker从harbor拉取镜像
 
-安装1.10.1的方式，把k8s-master和k8s-master两个节点都配置号权限。
+按照1.10.1的方式，把k8s-master和k8s-master两个节点都配置号权限。
 
-#### 1.14.3 k8s从harbort拉取镜像
+#### 1.14.2 k8s从harbort拉取镜像
 
 ```sh
 #获取凭证
@@ -2431,7 +2455,7 @@ cat ~/.docker/config.json |base64 -w 0
 
 #创建harbor-sercet
 vim harbor-sercet.yaml #见下文
-kubectl create -f sercet harbor-sercet.yaml
+kubectl create -f harbor-sercet.yaml
 
 #部署文件中添加harbor-sercet
 vim citest-deployment.yaml #见下文
@@ -2447,6 +2471,15 @@ vim citest-deployment.yaml #见下文
     name: harbor
   data:
     .dockerconfigjson: ewoJImF1dGhzIjogewoJCSIxMC4xLjIwLjIzNTo4MCI6IHsKCQkJImF1dGgiOiAiWVdSdGFXNDZTR0Z5WW05eU1USXpORFU9IgoJCX0KCX0KfQ==
+  type: kubernetes.io/dockerconfigjson
+  
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    namespace: test
+    name: harbor
+  data:
+    .dockerconfigjson: ewoJImF1dGhzIjogewoJCSIxOTIuMTY4LjEuMjM0OjgwIjogewoJCQkiYXV0aCI6ICJZV1J0YVc0NlNHRnlZbTl5TVRJek5EVT0iCgkJfQoJfSwKCSJIdHRwSGVhZGVycyI6IHsKCQkiVXNlci1BZ2VudCI6ICJEb2NrZXItQ2xpZW50LzE5LjAzLjExIChsaW51eCkiCgl9Cn0=
   type: kubernetes.io/dockerconfigjson
   ```
 
@@ -2474,7 +2507,7 @@ vim citest-deployment.yaml #见下文
           - name: harbor
         containers:
           - name: citest
-            image: 10.1.20.235:80/test/citest:latest
+            image: 192.168.1.234:80/test/citest:latest
             imagePullPolicy: Always
             ports:
               - containerPort: 8080
@@ -2511,11 +2544,16 @@ vim citest-deployment.yaml #见下文
 
 ```sh
 docker exec -it jenkins bash  #进入jenkins中
-ls ~/.ssh  #查看机器上是否用于公私钥
+ls ~/.ssh  #查看机器上是否有公私钥
 ssh-keygen -t rsa  #生成公私钥
 cd ~/.ssh
+authorized_keys
+authorized_keys
 scp id_rsa.pub root@10.1.20.235:/root/.ssh/authorized_keys #将公钥复制到k8s-master机器上
 ssh root@10.1.20.235 kubectl apply -f /usr/local/k8s/pipeline/pipeline-deployment.yaml #测试无密码执行
+
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDYtY8yoRK6APMA+133djR9vXSonaWQVdwY4/FUph9XDQt8kbKSlK5ag/zcqMsCjGwfbNiDV9dvHKVMY23bVfj5dttioxSz3DmUk8gDRvqg4K4QH4E6NxCVJCBOUztG1VrDUvJtX05cT9X6ufAjYONxnFUNiQvs50xa6/7yRegE65UOp5Ld64F/kvuZO7NftkNNNNr7uQXI8kuF016EYKeMYvsxMCSvGRVl0U1Y0ZtPiTXnNy1NsXD4w0jUb4rFnVCf1PYxjFBHD7s8BFEQPfXaEzH9834hlUQjm6yJTSxvBXp45fij4KeAd/Htc2yV3DtK7Y7ACpSJXw158wfAixo6XWuwHIB3qCPT4pyO84x0r8/ZnRqgkUIZ8xYrbZJYjDRIgBJ/xQNnjv68Oa8eyYQGNdvq13Lty3Eyp4RZUGRAmJWIdi0b/BKXv3nY0S6pBAQuZN1Pt6xj/j/3g2sG3MKHKyTzgUB5RdemDbrID8fJaaYvBesrJYdcU7Jf+YtAgWk= jenkins@a9ea9188f2ca
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDYtY8yoRK6APMA+133djR9vXSonaWQVdwY4/FUph9XDQt8kbKSlK5ag/zcqMsCjGwfbNiDV9dvHKVMY23bVfj5dttioxSz3DmUk8gDRvqg4K4QH4E6NxCVJCBOUztG1VrDUvJtX05cT9X6ufAjYONxnFUNiQvs50xa6/7yRegE65UOp5Ld64F/kvuZO7NftkNNNNr7uQXI8kuF016EYKeMYvsxMCSvGRVl0U1Y0ZtPiTXnNy1NsXD4w0jUb4rFnVCf1PYxjFBHD7s8BFEQPfXaEzH9834hlUQjm6yJTSxvBXp45fij4KeAd/Htc2yV3DtK7Y7ACpSJXw158wfAixo6XWuwHIB3qCPT4pyO84x0r8/ZnRqgkUIZ8xYrbZJYjDRIgBJ/xQNnjv68Oa8eyYQGNdvq13Lty3Eyp4RZUGRAmJWIdi0b/BKXv3nY0S6pBAQuZN1Pt6xj/j/3g2sG3MKHKyTzgUB5RdemDbrID8fJaaYvBesrJYdcU7Jf+YtAgWk= jenkins@a9ea9188f2ca
 ```
 
 #### 1.15.2 部署
@@ -2711,9 +2749,11 @@ http://10.1.20.235:32000
 
 
 
-## 2、maven私服
+## 2、微服务
 
-### 2.1 安装
+### 2.1 nexus3
+
+#### 2.1.1 安装
 
 ```sh
 #1.安装
@@ -2758,7 +2798,7 @@ services:
 
 
 
-### 2.2 maven仓库
+#### 2.1.2 maven仓库
 
 >**proxy**：这是代理方式，它是用来代理中央仓库的，例如我们依赖的包在本地仓库没有，就会到私服获取，私服没有的话，会到中央仓库先把包下载到这里，然后再下载到本地仓库；
 >
@@ -2788,7 +2828,7 @@ services:
 
 
 
-### 2.3 上传
+#### 2.1.3 上传
 
 setting.xml
 
@@ -2827,7 +2867,7 @@ goods服务pom.xml
 
 
 
-### 2.4 下载
+#### 2.1.4 下载
 
 setting.xml
 
@@ -2866,6 +2906,50 @@ business服务依赖goods服务
     <version>1.0-20221226.075416-1</version>
 </dependency>
 ```
+
+
+
+### 2.2 nacos
+
+
+
+### 2.3 gateway
+
+
+
+### 2.4 swagger
+
+
+
+### 2.5 mysql
+
+
+
+### 2.6 redis
+
+
+
+### 2.7 mq
+
+
+
+### 2.8 xxl-job
+
+
+
+
+
+## 3、监控系统
+
+
+
+
+
+## 4、日志系统
+
+
+
+
 
 
 
