@@ -2546,16 +2546,14 @@ vim citest-deployment.yaml #见下文
 ```sh
 docker exec -it jenkins bash  #进入jenkins中
 ls ~/.ssh  #查看机器上是否有公私钥
-ssh-keygen -t rsa  #生成公私钥
-cd ~/.ssh
-authorized_keys
-authorized_keys
-scp id_rsa.pub root@10.1.20.235:/root/.ssh/authorized_keys #将公钥复制到k8s-master机器上
-ssh root@10.1.20.235 kubectl apply -f /usr/local/k8s/pipeline/pipeline-deployment.yaml #测试无密码执行
-
-ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDYtY8yoRK6APMA+133djR9vXSonaWQVdwY4/FUph9XDQt8kbKSlK5ag/zcqMsCjGwfbNiDV9dvHKVMY23bVfj5dttioxSz3DmUk8gDRvqg4K4QH4E6NxCVJCBOUztG1VrDUvJtX05cT9X6ufAjYONxnFUNiQvs50xa6/7yRegE65UOp5Ld64F/kvuZO7NftkNNNNr7uQXI8kuF016EYKeMYvsxMCSvGRVl0U1Y0ZtPiTXnNy1NsXD4w0jUb4rFnVCf1PYxjFBHD7s8BFEQPfXaEzH9834hlUQjm6yJTSxvBXp45fij4KeAd/Htc2yV3DtK7Y7ACpSJXw158wfAixo6XWuwHIB3qCPT4pyO84x0r8/ZnRqgkUIZ8xYrbZJYjDRIgBJ/xQNnjv68Oa8eyYQGNdvq13Lty3Eyp4RZUGRAmJWIdi0b/BKXv3nY0S6pBAQuZN1Pt6xj/j/3g2sG3MKHKyTzgUB5RdemDbrID8fJaaYvBesrJYdcU7Jf+YtAgWk= jenkins@a9ea9188f2ca
-ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDYtY8yoRK6APMA+133djR9vXSonaWQVdwY4/FUph9XDQt8kbKSlK5ag/zcqMsCjGwfbNiDV9dvHKVMY23bVfj5dttioxSz3DmUk8gDRvqg4K4QH4E6NxCVJCBOUztG1VrDUvJtX05cT9X6ufAjYONxnFUNiQvs50xa6/7yRegE65UOp5Ld64F/kvuZO7NftkNNNNr7uQXI8kuF016EYKeMYvsxMCSvGRVl0U1Y0ZtPiTXnNy1NsXD4w0jUb4rFnVCf1PYxjFBHD7s8BFEQPfXaEzH9834hlUQjm6yJTSxvBXp45fij4KeAd/Htc2yV3DtK7Y7ACpSJXw158wfAixo6XWuwHIB3qCPT4pyO84x0r8/ZnRqgkUIZ8xYrbZJYjDRIgBJ/xQNnjv68Oa8eyYQGNdvq13Lty3Eyp4RZUGRAmJWIdi0b/BKXv3nY0S6pBAQuZN1Pt6xj/j/3g2sG3MKHKyTzgUB5RdemDbrID8fJaaYvBesrJYdcU7Jf+YtAgWk= jenkins@a9ea9188f2ca
+ssh-keygen -t rsa  #生成公私钥，见下图
+scp ~/.ssh/id_rsa.pub root@10.1.20.235:/root/.ssh/authorized_keys #将公钥复制到k8s-master机器上
+ssh root@10.1.20.235 kubectl get node #测试无密码执行
 ```
+
+生成公私钥
+
+![image-20221228202021730](devops.assets/image-20221228202021730.png)
 
 #### 1.15.2 部署
 
@@ -2722,19 +2720,19 @@ chown root:root /var/run/docker.sock
 chmod o+rw /var/run/docker.sock
 
 #gitlab是否重启
-http://10.1.20.235:8929  root:sp610527
+http://192.168.1.234:8929  root:sp610527
 #如果需要启动
 cd /usr/local/docker/gitlab
 docker-compose up -d
 
 #jenkins是否重启
-http://10.1.20.235:8080  root:root
+http://192.168.1.234:8080  root:root
 #如果需要启动
 cd /usr/local/docker/jenkins
 docker-compose up -d
 
 #harbor是否重启
-http://10.1.20.235:80  admin:Harbor12345
+http://192.168.1.234:80  admin:Harbor12345
 #如果需要启动
 cd /usr/local/docker/harbor
 ./install.sh
@@ -2745,7 +2743,7 @@ systemctl status kubelet
 systemctl start kubelet
 
 #服务是否健康
-http://10.1.20.235:32000
+http://192.168.1.235:30080
 ```
 
 
