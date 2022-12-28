@@ -1188,25 +1188,26 @@ NFS是一个网络文件存储系统，可以搭建一台NFS服务器，然后�
 - 安装
 
 ```sh
-#=============================================nfs 安装==============================================
-#master安装
+#=============================================nfs服务器=============================================
+#nfs服务器安装启动
 yum install -y nfs-utils rpcbind
-mkdir data
-cd data
-mkdir www-data
-vim /etc/exports
-	/usr/local/data/www-data 10.1.20.235/24(rw,sync)
 systemctl start nfs.service
 systemctl start rpcbind.service
 systemctl enable nfs.service
 systemctl enable rpcbind.service
-exportfs #验证
-#node安装
-yum install nfs-utils -y
-#node验证：node可以像本地一样访问远程，实际访问中还是要用网络
-showmount -e 10.1.20.235 #查询
-mount 10.1.20.235:/usr/local/data/www-data /mnt #映射
-#查看/mnt下是否有master映射的文件
+#配置
+vim /etc/exports
+	/usr/local/data/www-data 10.1.20.0/24(rw,sync)
+exportfs -r #使配置生效
+exportfs #查看配置
+
+#=============================================其他服务器=============================================
+yum install -y nfs-utils
+mount 10.1.20.235:/usr/local/data/www-data /mnt #配置映射
+showmount -e 10.1.20.235 #查看映射
+
+#=============================================测试===============================================
+#nfs服务器上，在/usr/local/data/www-data目录下新建文件，在其他服务器上查看/mnt下是否有相应的文件
 ```
 
 - 部署
@@ -1236,7 +1237,7 @@ spec:
   - name: logs-volume
     nfs:
       server: 10.1.20.253  #nfs服务器地址
-      path: /data/sunpeng/themes #共享文件路径
+      path: /usr/local/data/www-data #共享文件路径，需要nfs预先设置
 ```
 
 
