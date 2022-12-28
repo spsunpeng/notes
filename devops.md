@@ -2561,63 +2561,17 @@ ssh root@10.1.20.235 kubectl get node #测试无密码执行
 
 - Jenkinsfile新增步骤
 
+  deployment未改变k8s不会重启，kubectl rollout restart会强制重启。
+  
   ```sh
-  pipeline {
-      agent any
-  
-      environment{
-          service_name = 'citest'
-          project_name = 'test'
-          git_url = 'http://10.1.20.235:8929/root/citest.git'
-          harbor_url = '10.1.20.235:80'
-          harbor_project_name = "${project_name}"
-          harbor_user = 'admin'
-          harbor_passwd = 'Harbor12345'
-          deployment_file = "${service_name}-deployment.yaml"
-          deployment_name = "${service_name}"
-          k8s_namespace = "${project_name}"
-      }
-  
-      stages {
-          stage('通过git拉取代码') {
-              steps {
-                  git branch: "${branch}", url: "${git_url}"
-              }
-          }
-          stage('通过maven打包') {
-              steps {
-                  sh '/var/jenkins_home/maven/bin/mvn clean package'
-              }
-          }
-          stage('通过docker构建镜像') {
-              steps {
-                  sh '''mv target/*.jar .
-                  mv devops/* .
-                  docker build -t ${harbor_url}/${harbor_project_name}/${service_name}:latest .
-                  docker image prune -f'''
-              }
-          }
-          stage('向harbor上传镜像') {
-              steps {
-                  sh '''docker login -u ${harbor_user} -p ${harbor_passwd} $harbor_url
-                  docker push ${harbor_url}/${harbor_project_name}/${service_name}:latest'''
-              }
-          }
-          stage('通过ssh向k8s-master服务器推送deployment文件') {
-              steps {
-                  sshPublisher(publishers: [sshPublisherDesc(configName: 'k8s-master', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: "/$project_name/$service_name/", remoteDirectorySDF: false, removePrefix: '', sourceFiles: "$deployment_file")], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
-              }
-          }
           stage('远程执行kubectl命令') {
               steps {
-                  sh '''ssh root@10.1.20.235 kubectl delete deployment ${deployment_name} -n ${k8s_namespace}
-                  ssh root@10.1.20.235 kubectl apply -f /usr/local/k8s/${project_name}/${service_name}/${deployment_file}'''
+                  sh '''ssh root@192.168.1.235 kubectl apply -f /usr/local/k8s/${project_name}/${service_name}/${deployment_file}
+                  ssh root@192.168.1.235 kubectl rollout restart deployment ${service_name} -n ${k8s_namespace}'''
               }
           }
-      }
-  }
   ```
-
+  
 - 构建结果
 
   ![image-20221125164854016](devops.assets/image-20221125164854016.png)
@@ -2699,8 +2653,8 @@ pipeline {
         //所以citest-deployment.yaml需要指定远程的全路径：/usr/local/k8s/test/citest/citest-deployment.yaml
         stage('远程执行kubectl命令') {
             steps {
-                sh '''ssh root@10.1.20.235 kubectl delete deployment ${deployment_name} -n ${k8s_namespace}
-                ssh root@10.1.20.235 kubectl apply -f /usr/local/k8s/${project_name}/${service_name}/${deployment_file}'''
+                sh '''ssh root@192.168.1.235 kubectl apply -f /usr/local/k8s/${project_name}/${service_name}/${deployment_file}
+                ssh root@192.168.1.235 kubectl rollout restart deployment ${service_name} -n ${k8s_namespace}'''
             }
         }
     }
