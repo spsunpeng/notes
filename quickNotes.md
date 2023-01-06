@@ -159,6 +159,34 @@ jpa mybatisplus
 
 
 
+# 2023-01-06
+
+@Valid
+
+@NotNull 对象
+
+@NotEmpty 列表
+
+@NotBlank 字符串
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

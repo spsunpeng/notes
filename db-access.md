@@ -1050,14 +1050,11 @@ public class Person {
 
 `@TableId(type = IdType.INPUT)`
 
-> 主键，省略是框架葵酱 id 作为主键，如果它不是表中的主键或者压根没有这个字段，那么就会出错。
+> 如果实体类中没有声明主键，框架默认主键是`id`，如果字段`id`不存在或者不是主键，程序就会出错。
 >
-> IdType.ID_WORKER_STR 默认的;底层使用了雪花算法；类型为Integer
 > IdType.AUTO 数据库自增；数据库上也要勾上自增
-> IdType.NONE 没有设置主键类型；跟随全局；全局的主键策略如果没有设置，默认是雪花算法
-> IdType.INPUT 手动输入;必须手动输入，数据库自增也没用； 实测可以不输入
-> IdType.UUID 全局唯一id；无序;字符串； 
-> ID_WORKER_STR 全局唯一（idWorker的字符串表示)；
+>
+> IdType.ASSIGN_ID 委派(自定义)，如果没有没有自定义，默认实现算法是雪花算法。
 
 ### 2.3 字段
 
@@ -1109,7 +1106,7 @@ User selectByAliasName(@Param("name") String aliasName);
 User selectByName(String name);
 ```
 
-### 3.2 $ and #
+### 3.2 $ and # #
 
 ```sql
 SELECT * FROM t_system_system_resource where state = #{state} and grade = #{grade} order by ${orderBy}
@@ -1433,6 +1430,206 @@ mybatis-plus中QueryWrapper常用的条件参数
 ### 3.1 之前版本分页最多500
 
 > 解决方方法是配置分页，或者升级版本，或者不用包装类，直接写sql
+
+
+
+### 3.2 自定义主键生成策略
+
+- 实例类设置主键类型：`@TableId(type = IdType.ASSIGN_ID)`
+
+  ```java
+  @Data
+  @TableName(value = "mybatis_plus_son")
+  public class Son {
+      @TableId(type = IdType.ASSIGN_ID)
+      private Long sonId;
+      private String name;
+  }
+  ```
+
+- 生成策略，实现接口：`IdentifierGenerator`
+
+  ```java
+  @Component
+  public class CustomIdGenerator implements IdentifierGenerator {
+      @Override
+      public Number nextId(Object entity) {
+          System.out.println("下一个id");
+          return 104L;
+      }
+  }
+  ```
+
+
+
+### 3.3 配置工厂
+
+> 微服务在开发过程中，分服务可能使用基础组件的方式不同，为此，需要统一配置，各服务再引入配置工厂。数据库相关配置就是如此。
+>
+> 注意：使用配置工厂后，服务自己的配置就不会生效，比如持久层的主键生成策略配置，创建修改时间配置，等等。
+
+```java
+import com.baomidou.mybatisplus.annotation.DbType;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration;
+import com.baomidou.mybatisplus.core.MybatisConfiguration;
+import com.baomidou.mybatisplus.core.config.GlobalConfig;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean;
+import com.sp.config.CustomIdGenerator;
+import com.zaxxer.hikari.HikariDataSource;
+import org.apache.ibatis.type.EnumTypeHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy;
+import org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy;
+import org.springframework.boot.web.servlet.ServletComponentScan;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Primary;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
+
+/**
+ * 数据库工厂bean配置
+ */
+@Configuration(proxyBeanMethods = false)
+@EnableConfigurationProperties(BizcloudDataSourceProperties.class)
+@ConditionalOnProperty(name = "enable", prefix = "bizcloud.starter.datasource", havingValue = "true")
+@EnableTransactionManagement
+@ServletComponentScan
+public class BizcloudDataSourceAutoConfiguration {
+
+    private static final Logger log = LoggerFactory.getLogger(BizcloudDataSourceAutoConfiguration.class);
+
+    @Autowired
+    private BizcloudDataSourceProperties bizcloudDataSourceProperties;
+
+
+    @Bean(value = "bizcloudDataSource")
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    @Primary
+    public DataSource dataSource() {
+        HikariDataSource hikariDataSource = new HikariDataSource();
+        hikariDataSource.setDriverClassName(bizcloudDataSourceProperties.getDriverClassName());
+        hikariDataSource.setJdbcUrl(bizcloudDataSourceProperties.getUrl());
+        hikariDataSource.setUsername(bizcloudDataSourceProperties.getUsername());
+        hikariDataSource.setPassword(bizcloudDataSourceProperties.getPassword());
+        HikariProperties hikari = bizcloudDataSourceProperties.getHikari();
+        hikariDataSource.setMinimumIdle(hikari.getMinimumIdle());
+        hikariDataSource.setMaximumPoolSize(hikari.getMaximumPoolSize());
+        hikariDataSource.setMaxLifetime(TimeUnit.SECONDS.toMillis(hikari.getMaxLifetime()));
+        hikariDataSource.setIdleTimeout(TimeUnit.SECONDS.toMillis(hikari.getIdleTimeout()));
+        hikariDataSource.setPoolName(hikari.getPoolName());
+        hikariDataSource.setConnectionTestQuery(hikari.getConnectionTestQuery());
+        log.info("bizcloud hikariDataSource config: \r\n jdbcUrl:[{}] minIdle:[{}] maxPoolSize:[{}] maxLifetime:[{}] idleTimeout:[{}] poolName:[{}]",
+                hikariDataSource.getJdbcUrl(), hikariDataSource.getMinimumIdle(), hikariDataSource.getMaximumPoolSize()
+                , hikariDataSource.getMaxLifetime(), hikariDataSource.getIdleTimeout(), hikariDataSource.getPoolName());
+        log.info("bizcloud-starter dataSource init success ...");
+        return hikariDataSource;
+    }
+
+
+    @Configuration
+    @ConditionalOnClass(value = {MybatisPlusAutoConfiguration.class})
+    @DependsOn("bizcloudDataSource")
+    public class BizCloudMybatisPlusAutoConfiguration {
+
+        @Autowired
+        @Qualifier("bizcloudDataSource")
+        private DataSource bizcloudDataSource;
+
+        @Bean("bizcloudSqlSessionFactory")
+        public MybatisSqlSessionFactoryBean sqlSessionFactory() throws IOException {
+            // 1.数据源
+            MybatisSqlSessionFactoryBean bizcloudSqlSessionFactory = new MybatisSqlSessionFactoryBean();
+            bizcloudSqlSessionFactory.setDataSource(bizcloudDataSource);
+            Resource[] resources = new PathMatchingResourcePatternResolver().getResources(StringUtils.isBlank(bizcloudDataSourceProperties.getMybatisMapperLocations()) ?
+                    "classpath:mapper/**/*.xml" : bizcloudDataSourceProperties.getMybatisMapperLocations());
+            bizcloudSqlSessionFactory.setMapperLocations(resources);
+
+            // 2.
+            MybatisConfiguration mybatisConfiguration = new MybatisConfiguration();
+            mybatisConfiguration.setMapUnderscoreToCamelCase(true);
+            //mybatisConfiguration.setLogImpl(org.apache.ibatis.logging.log4j2.Log4j2Impl.class);
+            mybatisConfiguration.setDefaultEnumTypeHandler(org.apache.ibatis.type.BaseTypeHandler.class);
+            mybatisConfiguration.setMapUnderscoreToCamelCase(true);
+            //设置枚举类型映射用 name
+            mybatisConfiguration.setDefaultEnumTypeHandler(EnumTypeHandler.class);
+            bizcloudSqlSessionFactory.setConfiguration(mybatisConfiguration);
+
+            // 3.配置
+            GlobalConfig globalConfig = new GlobalConfig();
+            //自定义id生成器
+            globalConfig.setIdentifierGenerator(new CustomIdGenerator());
+            //id自增策略
+            GlobalConfig.DbConfig dbConfig = new GlobalConfig.DbConfig();
+            dbConfig.setIdType(IdType.AUTO);
+            globalConfig.setDbConfig(dbConfig);
+            bizcloudSqlSessionFactory.setGlobalConfig(globalConfig);
+            log.info("bizcloud-mybatis-plus init success ...");
+
+            // 4.过滤器
+            MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+            // 分页
+            interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
+            // 乐观锁
+            interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
+            bizcloudSqlSessionFactory.setPlugins(interceptor);
+
+            return bizcloudSqlSessionFactory;
+        }
+
+    }
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
