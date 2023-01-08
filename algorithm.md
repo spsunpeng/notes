@@ -238,9 +238,19 @@ java中使用的是大端存储，操作系统一般用的是小端存储，C/C+
 
 
 
+常数
 
+时间复杂度
 
+HashMap(String, String)
 
+HashMap(Integer, String)
+
+HashMap(Node, String)
+
+TreeMap()
+
+注意头尾指向的修改，防止内存泄漏
 
 
 
