@@ -429,7 +429,7 @@ Leetcode原题，https://leetcode.com/problems/balanced-binary-tree
 Leetcode原题，https://leetcode.com/problems/path-sum
 在二叉树上收集所有达标的路径和
 Leetcode原题，https://leetcode.com/problems/path-sum-ii
-判断二叉树是否是搜索二叉树
+
 
 
 08 介绍归并排序和快速排序
@@ -442,6 +442,46 @@ Leetcode原题，https://leetcode.com/problems/path-sum-ii
 归并排序的递归实现和非递归实现
 快速排序的递归实现和非递归实现
 ```
+
+
+
+
+
+
+
+//左==空 右==空，右==1， 右>1
+
+//有
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

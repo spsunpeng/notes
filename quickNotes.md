@@ -181,7 +181,25 @@ jpa mybatisplus
 
 
 
+地址
 
+https://es-cn-7pp2pb21j000eu3y4.kibana.elasticsearch.aliyuncs.com:5601/app/discover?#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-15m,to:now))&_a=(columns:!(level,service,class,method,line,customMessage,thread),filters:!(),index:'4490f430-d826-11ec-81f0-d967970474fd',interval:auto,query:(language:kuery,query:''),sort:!())
+
+
+
+g2
+
+https://bplusdev.sinosun.com:31443/mallbbcg2sit/swagger-ui/index.html?urls.primaryName=%E5%95%86%E6%88%B7%E6%A8%A1%E5%9D%97
+
+https://bplusdev.sinosun.com:18180/mallbbcg2/v3/system/admin/address/get
+
+swagger为什么不和mallbbcg2用同一个nginx，因为
+
+业务用的nginx转发的是： /mallbbcg2/v3/...  ->  mallbbcg2-gateway服务 /v3/....
+
+swagger用的nginx转发是 /mallbbcg2sit
+
+如果swagger也用业务的nginx，那么需要想办法抹除 /v3
 
 
 
